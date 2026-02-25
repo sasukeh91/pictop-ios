@@ -1,0 +1,57 @@
+workflows:
+  ios-workflow:
+    name: PicTop iOS Build
+    max_build_duration: 60
+    environment:
+      xcode: latest
+      node: v20
+      vars:
+        APP_ID: ro.pictop.app
+        APP_NAME: "PicTop"
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: ro.pictop.app
+    scripts:
+      - name: Install dependencies
+        script: npm install
+
+      - name: Install Capacitor CLI
+        script: npm install -g @capacitor/cli
+
+      - name: Add iOS platform
+        script: |
+          if [ ! -d "ios" ]; then
+            npx cap add ios
+          fi
+
+      - name: Copy web assets
+        script: npx cap copy ios
+
+      - name: Update iOS project
+        script: npx cap update ios
+
+      - name: Set app version
+        script: |
+          CURRENT_BUILD=$(app-store-connect get-latest-build-number "$APP_ID" --platform IOS 2>/dev/null || echo "0")
+          NEW_BUILD=$((CURRENT_BUILD + 1))
+          agvtool new-marketing-version 1.0.0
+          agvtool new-version -all $NEW_BUILD
+        working_directory: ios/App
+
+      - name: Build iOS
+        script: |
+          xcode-project build-ipa \
+            --workspace ios/App/App.xcworkspace \
+            --scheme App \
+            --archive-flags="-destination 'generic/platform=iOS'"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
