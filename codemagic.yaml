@@ -5,6 +5,8 @@ workflows:
     environment:
       xcode: latest
       node: v20
+      groups:
+        - app_store_connect
       vars:
         APP_ID: ro.pictop.app
         APP_NAME: "PicTop"
