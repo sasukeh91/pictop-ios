@@ -15,12 +15,14 @@ workflows:
         script: |
           keychain initialize
           echo "$APP_STORE_CONNECT_PRIVATE_KEY" | base64 -d > /tmp/AuthKey.p8
+          echo "$CERTIFICATE_PRIVATE_KEY" | base64 -d > /tmp/CertKey.pem
           app-store-connect fetch-signing-files "$APP_ID" \
             --type IOS_APP_STORE \
             --create \
             --private-key @file:/tmp/AuthKey.p8 \
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
-            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID"
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --certificate-key @file:/tmp/CertKey.pem
           keychain add-certificates
 
       - name: Install dependencies
