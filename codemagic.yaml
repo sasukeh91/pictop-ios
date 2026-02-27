@@ -11,14 +11,13 @@ workflows:
         APP_ID: ro.pictop.app
         APP_NAME: "PicTop"
     scripts:
-      - name: Setup code signing
+      - name: Initialize keychain and fetch signing files
         script: |
           keychain initialize
           app-store-connect fetch-signing-files "$APP_ID" \
             --type IOS_APP_STORE \
             --create
           keychain add-certificates
-          xcode-project use-profiles
 
       - name: Install dependencies
         script: npm install
@@ -37,6 +36,9 @@ workflows:
 
       - name: Update iOS project
         script: npx cap update ios
+
+      - name: Apply provisioning profiles
+        script: xcode-project use-profiles
 
       - name: Set app version
         script: |
