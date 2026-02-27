@@ -16,7 +16,10 @@ workflows:
           keychain initialize
           app-store-connect fetch-signing-files "$APP_ID" \
             --type IOS_APP_STORE \
-            --create
+            --create \
+            --private-key @env:APP_STORE_CONNECT_PRIVATE_KEY \
+            --key-id @env:APP_STORE_CONNECT_KEY_IDENTIFIER \
+            --issuer-id @env:APP_STORE_CONNECT_ISSUER_ID
           keychain add-certificates
 
       - name: Install dependencies
