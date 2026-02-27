@@ -10,10 +10,16 @@ workflows:
       vars:
         APP_ID: ro.pictop.app
         APP_NAME: "PicTop"
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: ro.pictop.app
     scripts:
+      - name: Setup code signing
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "$APP_ID" \
+            --type IOS_APP_STORE \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles
+
       - name: Install dependencies
         script: npm install
 
