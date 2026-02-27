@@ -14,12 +14,13 @@ workflows:
       - name: Initialize keychain and fetch signing files
         script: |
           keychain initialize
+          echo "$APP_STORE_CONNECT_PRIVATE_KEY" | base64 -d > /tmp/AuthKey.p8
           app-store-connect fetch-signing-files "$APP_ID" \
             --type IOS_APP_STORE \
             --create \
-            --private-key @env:APP_STORE_CONNECT_PRIVATE_KEY \
-            --key-id @env:APP_STORE_CONNECT_KEY_IDENTIFIER \
-            --issuer-id @env:APP_STORE_CONNECT_ISSUER_ID
+            --private-key @file:/tmp/AuthKey.p8 \
+            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID"
           keychain add-certificates
 
       - name: Install dependencies
@@ -64,7 +65,7 @@ workflows:
 
     publishing:
       app_store_connect:
-        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        api_key: /tmp/AuthKey.p8
         key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID
         submit_to_testflight: true
