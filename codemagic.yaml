@@ -46,7 +46,20 @@ workflows:
           fi
 
       - name: Generate app icons
-        script: npx @capacitor/assets generate --ios
+        script: |
+          ICON_SRC="resources/icon.png"
+          ICON_DIR="ios/App/App/Assets.xcassets/AppIcon.appiconset"
+          echo "Source icon dimensions:"
+          sips -g pixelWidth -g pixelHeight "$ICON_SRC"
+          echo "Replacing all icons in $ICON_DIR"
+          for f in "$ICON_DIR"/*.png; do
+            [ -f "$f" ] || continue
+            w=$(sips -g pixelWidth "$f" | awk '/pixelWidth/{print $2}')
+            h=$(sips -g pixelHeight "$f" | awk '/pixelHeight/{print $2}')
+            echo "  -> $f (${w}x${h})"
+            sips -z $h $w "$ICON_SRC" --out "$f"
+          done
+          echo "=== All icons replaced ==="
 
       - name: Copy web assets
         script: npx cap copy ios
@@ -67,7 +80,7 @@ workflows:
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" 2>&1) || true
           echo "Raw output: '$RAW_BUILD'"
           CURRENT_BUILD=$(echo "$RAW_BUILD" | grep -E '^[0-9]+$' | tail -1)
-          CURRENT_BUILD=${CURRENT_BUILD:-3}
+          CURRENT_BUILD=${CURRENT_BUILD:-5}
           echo "CURRENT_BUILD: $CURRENT_BUILD"
           NEW_BUILD=$((CURRENT_BUILD + 1))
           echo "NEW_BUILD: $NEW_BUILD"
