@@ -5,13 +5,24 @@ workflows:
     environment:
       xcode: latest
       node: v20
+      groups:
+        - app_store_connect
       vars:
         APP_ID: ro.pictop.app
         APP_NAME: "PicTop"
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: ro.pictop.app
     scripts:
+      - name: Initialize keychain and fetch signing files
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "$APP_ID" \
+            --type IOS_APP_STORE \
+            --create \
+            --private-key @env:APP_STORE_CONNECT_PRIVATE_KEY \
+            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --certificate-key @env:CERTIFICATE_PRIVATE_KEY
+          keychain add-certificates
+
       - name: Install dependencies
         script: npm install
 
@@ -30,6 +41,9 @@ workflows:
       - name: Update iOS project
         script: npx cap update ios
 
+      - name: Apply provisioning profiles
+        script: xcode-project use-profiles
+
       - name: Set app version
         script: |
           CURRENT_BUILD=$(app-store-connect get-latest-build-number "$APP_ID" --platform IOS 2>/dev/null || echo "0")
@@ -45,13 +59,15 @@ workflows:
             --scheme App \
             --archive-flags="-destination 'generic/platform=iOS'"
 
+      - name: Upload to TestFlight
+        script: |
+          app-store-connect publish \
+            --path build/ios/ipa/App.ipa \
+            --private-key @env:APP_STORE_CONNECT_PRIVATE_KEY \
+            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --testflight
+
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
-
-    publishing:
-      app_store_connect:
-        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
-        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
-        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-        submit_to_testflight: true
