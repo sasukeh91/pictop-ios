@@ -59,13 +59,18 @@ workflows:
 
       - name: Set app version
         script: |
-          CURRENT_BUILD=$(app-store-connect get-latest-build-number "$APP_ID" \
+          echo "=== Version Debug ==="
+          RAW_BUILD=$(app-store-connect get-latest-build-number "$APP_ID" \
             --platform IOS \
             --private-key @file:/tmp/AuthKey.p8 \
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
-            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
-            2>/dev/null || echo "1")
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" 2>&1) || true
+          echo "Raw output: '$RAW_BUILD'"
+          CURRENT_BUILD=$(echo "$RAW_BUILD" | grep -E '^[0-9]+$' | tail -1)
+          CURRENT_BUILD=${CURRENT_BUILD:-1}
+          echo "CURRENT_BUILD: $CURRENT_BUILD"
           NEW_BUILD=$((CURRENT_BUILD + 1))
+          echo "NEW_BUILD: $NEW_BUILD"
           agvtool new-marketing-version 1.0.0
           agvtool new-version -all $NEW_BUILD
         working_directory: ios/App
