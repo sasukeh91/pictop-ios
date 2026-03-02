@@ -11,16 +11,26 @@ workflows:
         APP_ID: ro.pictop.app
         APP_NAME: "PicTop"
     scripts:
+      - name: Prepare API key
+        script: |
+          echo "$APP_STORE_CONNECT_PRIVATE_KEY" | base64 -d | tr -d '\r' > /tmp/AuthKey.p8
+          echo "=== Key debug ==="
+          head -1 /tmp/AuthKey.p8
+          tail -1 /tmp/AuthKey.p8
+          echo "Lines: $(wc -l < /tmp/AuthKey.p8)"
+          openssl pkey -in /tmp/AuthKey.p8 -check -noout 2>&1 || echo "KEY CHECK FAILED"
+
       - name: Initialize keychain and fetch signing files
         script: |
           keychain initialize
+          openssl genrsa -out /tmp/cert_key.pem 2048
           app-store-connect fetch-signing-files "$APP_ID" \
             --type IOS_APP_STORE \
             --create \
-            --private-key @env:APP_STORE_CONNECT_PRIVATE_KEY \
+            --private-key @file:/tmp/AuthKey.p8 \
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
-            --certificate-key @env:CERTIFICATE_PRIVATE_KEY
+            --certificate-key @file:/tmp/cert_key.pem
           keychain add-certificates
 
       - name: Install dependencies
@@ -63,7 +73,7 @@ workflows:
         script: |
           app-store-connect publish \
             --path build/ios/ipa/App.ipa \
-            --private-key @env:APP_STORE_CONNECT_PRIVATE_KEY \
+            --private-key @file:/tmp/AuthKey.p8 \
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
             --testflight
