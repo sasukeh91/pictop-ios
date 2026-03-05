@@ -1,12 +1,1609 @@
 <!DOCTYPE html>
-<html>
+<html lang="ro">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=https://pictop.ro">
-  <title>PicTop</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0f0f0f">
+<title>PicTop</title>
+<style>
+/* ── THEMES ── */
+body{--accent:#ff3b6b;--accent2:#ff8c42;--grad:linear-gradient(135deg,#ff3b6b,#ff8c42);}
+body.dark{--bg:#0f0f0f;--card:#1a1a1a;--card2:#222;--text:#fff;--muted:#777;--border:#2a2a2a;--overlay:rgba(0,0,0,.85);}
+body.light{--bg:#f0f0f0;--card:#fff;--card2:#f5f5f5;--text:#111;--muted:#888;--border:#e0e0e0;--overlay:rgba(255,255,255,.9);}
+body.ocean{--bg:#071428;--card:#0c1f3f;--card2:#102550;--text:#e8f4ff;--muted:#6a9fc0;--border:#1a3a60;--overlay:rgba(7,20,40,.9);}
+body.purple{--bg:#0d0920;--card:#1a1035;--card2:#22184a;--text:#f0e8ff;--muted:#8b72be;--border:#2d1f55;--overlay:rgba(13,9,32,.9);}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:background .3s,color .3s;}
+
+/* ── OVERLAY/SCREENS ── */
+.screen{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:env(safe-area-inset-top,20px) 20px 24px;overflow-y:auto;}
+.screen.hidden{display:none;}
+
+/* ── LOGO ── */
+.logo{font-size:34px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-1px;margin-bottom:4px;margin-top:16px;}
+.logo-sub{color:var(--muted);font-size:13px;margin-bottom:28px;text-align:center;}
+
+/* ── AUTH CARD ── */
+.auth-card{width:100%;max-width:390px;background:var(--card);border-radius:24px;padding:24px 20px;border:1px solid var(--border);}
+.auth-title{font-size:20px;font-weight:800;margin-bottom:18px;text-align:center;}
+
+/* ── INPUTS ── */
+.inp-wrap{margin-bottom:12px;}
+.inp-wrap label{font-size:11px;font-weight:600;color:var(--muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;}
+.inp-wrap input,.inp-wrap select{width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;color:var(--text);font-size:15px;outline:none;transition:border-color .2s;-webkit-appearance:none;}
+.inp-wrap input:focus,.inp-wrap select:focus{border-color:var(--accent);}
+.inp-wrap select option{background:var(--card);}
+
+/* ── BUTTONS ── */
+.btn{width:100%;padding:15px;border-radius:16px;border:none;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s,transform .1s;letter-spacing:.2px;}
+.btn:active{transform:scale(.98);opacity:.85;}
+.btn-primary{background:var(--grad);color:#fff;}
+.btn-ghost{background:var(--card2);color:var(--text);border:1.5px solid var(--border);margin-top:10px;}
+.btn+.btn{margin-top:10px;}
+
+/* ── GOOGLE BTN ── */
+#google-btn-container{display:flex;justify-content:center;margin-bottom:4px;}
+
+/* ── DIVIDER ── */
+.divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--muted);font-size:12px;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ── LINKS ── */
+.link-row{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:14px;flex-wrap:wrap;}
+.link-btn{color:var(--accent);font-size:13px;cursor:pointer;font-weight:600;}
+.link-btn.muted{color:var(--muted);}
+
+/* ── ERROR ── */
+.err-msg{font-size:13px;text-align:center;margin-top:6px;min-height:16px;color:#ff4444;}
+.ok-msg{font-size:13px;text-align:center;margin-top:6px;color:#4ade80;}
+
+/* ── AGE CHECK ── */
+.age-check{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;cursor:pointer;}
+.age-check input[type=checkbox]{width:20px;height:20px;flex-shrink:0;margin-top:1px;accent-color:var(--accent);}
+.age-check span{font-size:13px;color:var(--muted);line-height:1.5;}
+
+/* ── EMOJI PICKER ── */
+.emoji-pick-btn{width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:14px;padding:12px;font-size:26px;cursor:pointer;text-align:center;}
+.emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;max-height:180px;overflow-y:auto;background:var(--card2);border-radius:14px;padding:8px;margin-top:6px;}
+.emoji-grid.hidden{display:none;}
+.e-opt{font-size:20px;cursor:pointer;text-align:center;padding:4px;border-radius:8px;transition:background .1s;}
+.e-opt:hover,.e-opt.sel{background:var(--accent);}
+
+/* ══════════════════════════════════════════════
+   MAIN APP
+══════════════════════════════════════════════ */
+#app{position:fixed;inset:0;display:flex;flex-direction:column;}
+#app.hidden{display:none;}
+
+/* ── TOP BAR ── */
+.top-bar{position:absolute;top:0;left:0;right:0;z-index:100;padding:env(safe-area-inset-top,12px) 16px 10px;background:linear-gradient(to bottom,rgba(0,0,0,.75) 0%,transparent 100%);}
+.top-bar-row{display:flex;align-items:center;justify-content:space-between;}
+.app-logo{font-size:20px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.top-actions{display:flex;align-items:center;gap:8px;}
+.icon-btn{background:rgba(0,0,0,.5);border:none;border-radius:10px;padding:7px 10px;cursor:pointer;color:#fff;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;backdrop-filter:blur(8px);}
+.icon-btn svg{width:16px;height:16px;}
+#round-timer{font-size:11px;color:rgba(255,255,255,.6);}
+
+/* ── CITY FILTER SHEET ── */
+.sheet-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;display:flex;align-items:flex-end;}
+.sheet-backdrop.hidden{display:none;}
+.bottom-sheet{background:var(--card);border-radius:24px 24px 0 0;padding:20px 16px calc(env(safe-area-inset-bottom,0px) + 20px);width:100%;max-height:70vh;display:flex;flex-direction:column;}
+.sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
+.sheet-title{font-size:16px;font-weight:800;margin-bottom:12px;}
+.sheet-search{width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;margin-bottom:10px;}
+.sheet-search:focus{border-color:var(--accent);}
+.city-list{overflow-y:auto;flex:1;}
+.city-item{padding:13px 12px;border-radius:12px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:space-between;}
+.city-item:active{background:var(--card2);}
+.city-item.active-city{color:var(--accent);font-weight:700;}
+.city-item svg{width:16px;height:16px;color:var(--accent);}
+
+/* ── FEED ── */
+#feed-tab{flex:1;position:relative;overflow:hidden;}
+.photo-wrap{position:absolute;inset:0;background:#000;}
+.photo-wrap img{width:100%;height:100%;object-fit:cover;}
+.photo-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.75) 0%,transparent 35%,transparent 65%,rgba(0,0,0,.4) 100%);}
+
+/* Score badge */
+.score-pill{position:absolute;top:calc(env(safe-area-inset-top,12px) + 60px);left:16px;padding:6px 14px;border-radius:20px;font-size:14px;font-weight:800;backdrop-filter:blur(8px);background:rgba(0,0,0,.55);}
+.score-pill.pos{color:#4ade80;}
+.score-pill.neg{color:#ff5555;}
+.score-pill.zero{color:#fff;}
+
+/* Photo user info */
+.photo-user{position:absolute;bottom:82px;left:16px;right:70px;}
+.photo-emoji-lbl{font-size:26px;margin-bottom:4px;}
+.photo-uname{font-size:15px;font-weight:800;color:#fff;}
+.photo-ucity{font-size:12px;color:rgba(255,255,255,.65);margin-top:1px;}
+.photo-time{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px;}
+
+/* Tap overlay */
+.tap-zone{position:absolute;inset:0;z-index:10;}
+
+/* ── RATING SIDEBAR ── */
+.rating-bar{position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;z-index:20;}
+.rb-label{font-size:11px;font-weight:800;color:#fff;text-shadow:0 0 8px rgba(255,59,107,.8);}
+.rb-track{width:44px;height:200px;background:rgba(255,59,107,.15);border-radius:22px;position:relative;cursor:pointer;overflow:hidden;border:2px solid rgba(255,59,107,.8);touch-action:none;box-shadow:0 0 20px rgba(255,59,107,.4),inset 0 0 20px rgba(255,59,107,.08);}
+.rb-fill-pos{position:absolute;bottom:50%;left:0;right:0;background:linear-gradient(to top,#4ade80,#22c55e);border-radius:0 0 20px 20px;}
+.rb-fill-neg{position:absolute;top:50%;left:0;right:0;background:linear-gradient(to bottom,#ff5555,#dc2626);border-radius:20px 20px 0 0;}
+.rb-handle{position:absolute;left:50%;transform:translateX(-50%);width:32px;height:32px;background:var(--grad);border-radius:50%;box-shadow:0 2px 16px rgba(255,59,107,.65);top:calc(50% - 16px);}
+.rb-voted{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.rb-voted-lbl{font-size:10px;color:rgba(255,255,255,.6);}
+.rb-voted-val{font-size:22px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+
+/* Action buttons bottom-left */
+.photo-actions{position:absolute;bottom:82px;right:12px;display:flex;flex-direction:column;gap:8px;z-index:20;align-items:center;}
+.act-btn{width:44px;height:44px;border-radius:14px;background:rgba(0,0,0,.6);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(8px);}
+.act-btn svg{width:20px;height:20px;color:#fff;}
+.act-btn:active{transform:scale(.9);}
+
+/* Tap hint */
+.tap-hint{position:absolute;bottom:76px;left:50%;transform:translateX(-50%);font-size:11px;color:rgba(255,255,255,.35);white-space:nowrap;pointer-events:none;z-index:5;}
+
+/* Empty feed */
+.empty-feed{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:32px;}
+.empty-feed svg{opacity:.25;width:64px;height:64px;}
+.empty-feed p{color:var(--muted);font-size:15px;text-align:center;}
+
+/* ── BOTTOM NAV ── */
+.bnav{position:absolute;bottom:0;left:0;right:0;height:calc(58px + env(safe-area-inset-bottom,0px));background:var(--overlay, rgba(15,15,15,.95));border-top:1px solid var(--border);display:flex;backdrop-filter:blur(16px);z-index:100;}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding-bottom:env(safe-area-inset-bottom,0px);border:none;background:none;color:var(--muted);transition:color .2s;}
+.bnav-btn.on{color:var(--accent);}
+.bnav-btn svg{width:22px;height:22px;}
+.bnav-btn span{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+
+/* ── PROFILE TAB ── */
+#profile-tab{position:absolute;inset:0 0 58px 0;overflow-y:auto;padding:calc(env(safe-area-inset-top,12px) + 12px) 16px 24px;background:var(--bg);}
+#profile-tab.hidden{display:none;}
+
+.prof-header{display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-top:6px;}
+.prof-emoji{font-size:50px;cursor:pointer;flex-shrink:0;}
+.prof-meta h2{font-size:19px;font-weight:800;}
+.prof-meta p{font-size:13px;color:var(--muted);margin-top:2px;}
+.rank-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-top:6px;}
+.rb1{background:rgba(255,215,0,.12);color:#ffd700;border:1px solid rgba(255,215,0,.25);}
+.rb2{background:rgba(192,192,192,.12);color:#c0c0c0;border:1px solid rgba(192,192,192,.25);}
+.rb3{background:rgba(205,127,50,.12);color:#cd7f32;border:1px solid rgba(205,127,50,.25);}
+.rb0{background:rgba(255,255,255,.06);color:var(--muted);border:1px solid var(--border);}
+
+.sec-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:18px 0 10px;}
+
+/* Post card */
+.post-card{background:var(--card);border-radius:20px;border:2px dashed var(--border);padding:28px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:border-color .2s,background .15s;margin-bottom:16px;min-height:180px;}
+.post-card:active{background:var(--card2);border-color:var(--accent);}
+.post-icon{width:58px;height:58px;background:rgba(255,59,107,.1);border-radius:16px;display:flex;align-items:center;justify-content:center;}
+.post-icon svg{width:28px;height:28px;color:var(--accent);}
+.post-card h3{font-size:17px;font-weight:800;}
+.post-card p{font-size:13px;color:var(--muted);text-align:center;line-height:1.5;}
+
+/* My photo card */
+.my-card{background:var(--card);border-radius:20px;overflow:hidden;margin-bottom:16px;}
+.my-card img{width:100%;aspect-ratio:3/4;object-fit:cover;}
+.my-card-stats{padding:14px;}
+.my-score{font-size:30px;font-weight:900;}
+.my-score.pos{color:#4ade80;}
+.my-score.neg{color:#ff5555;}
+.my-votes-lbl{font-size:12px;color:var(--muted);margin-top:3px;}
+
+/* Rank info card */
+.rank-card{background:var(--card);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.rank-icon-wrap{width:44px;height:44px;border-radius:14px;background:rgba(255,59,107,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rank-icon-wrap svg{width:22px;height:22px;color:var(--accent);}
+.rank-info h4{font-size:14px;font-weight:700;}
+.rank-info p{font-size:12px;color:var(--muted);margin-top:2px;}
+
+/* Theme picker */
+.theme-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+.theme-dot{height:48px;border-radius:14px;cursor:pointer;border:2.5px solid transparent;transition:border-color .15s,transform .1s;display:flex;align-items:center;justify-content:center;}
+.theme-dot:active{transform:scale(.95);}
+.theme-dot.sel{border-color:var(--accent);}
+.t-dark{background:#0f0f0f;}
+.t-light{background:#f0f0f0;}
+.t-ocean{background:#071428;}
+.t-purple{background:#0d0920;}
+.theme-dot svg{width:18px;height:18px;}
+
+/* Camera loading */
+.cam-load{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+.cam-load.hidden{display:none;}
+.spinner{width:46px;height:46px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.cam-load p{color:var(--muted);font-size:14px;}
+
+/* Winners sheet */
+.modal-back{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;align-items:flex-end;}
+.modal-back.hidden{display:none;}
+.modal-sheet{background:var(--card);border-radius:24px 24px 0 0;padding:20px 16px calc(env(safe-area-inset-bottom,0px)+20px);width:100%;max-height:80vh;overflow-y:auto;}
+.modal-sheet h2{font-size:18px;font-weight:800;text-align:center;margin-bottom:4px;}
+.modal-sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:18px;}
+.winner-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);}
+.winner-row:last-child{border-bottom:none;}
+.w-rank{width:28px;text-align:center;flex-shrink:0;}
+.w-rank svg{width:22px;height:22px;}
+.w-photo{width:50px;height:50px;border-radius:12px;object-fit:cover;flex-shrink:0;}
+.w-info h4{font-size:14px;font-weight:700;}
+.w-info p{font-size:12px;color:var(--muted);}
+.w-score{margin-left:auto;font-size:17px;font-weight:800;color:var(--accent);}
+.modal-close{width:100%;padding:14px;background:var(--card2);border:none;border-radius:14px;color:var(--text);font-size:15px;font-weight:700;cursor:pointer;margin-top:16px;}
+
+/* Loading */
+#loading{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;}
+#loading.hidden{display:none;}
+.load-logo{font-size:44px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.load-bar{width:110px;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+.load-fill{height:100%;background:var(--grad);animation:lfill 1.4s ease-in-out infinite;}
+@keyframes lfill{0%{width:0}100%{width:100%}}
+
+input[type=file]{display:none;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* ── TOP / LEADERBOARD TAB ── */
+#top-tab{position:absolute;inset:0 0 58px 0;overflow-y:auto;background:var(--bg);}
+#top-tab.hidden{display:none;}
+.top-hero{background:var(--grad);padding:calc(env(safe-area-inset-top,12px) + 48px) 16px 28px;text-align:center;}
+.top-hero h2{font-size:24px;font-weight:900;color:#fff;margin-bottom:4px;}
+.top-hero p{font-size:13px;color:rgba(255,255,255,.85);}
+.podium-wrap{display:flex;align-items:flex-end;justify-content:center;gap:10px;padding:20px 16px 0;background:var(--bg);}
+.pod-item{display:flex;flex-direction:column;align-items:center;gap:5px;}
+.pod-img{border-radius:14px;object-fit:cover;border:3px solid;}
+.pod-medal{font-size:26px;}
+.pod-uname{font-size:11px;font-weight:700;color:var(--text);max-width:84px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:center;}
+.pod-score{font-size:13px;font-weight:900;color:var(--accent);}
+.pod-base{border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;}
+.lb-section{padding:16px 16px 20px;}
+.lb-city-lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;}
+.lb-row{display:flex;align-items:center;gap:12px;padding:12px;background:var(--card);border-radius:16px;margin-bottom:8px;border:1px solid var(--border);}
+.lb-num{width:26px;text-align:center;font-size:16px;flex-shrink:0;}
+.lb-thumb{width:50px;height:50px;border-radius:12px;object-fit:cover;flex-shrink:0;}
+.lb-info{flex:1;min-width:0;}
+.lb-info h4{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lb-info p{font-size:12px;color:var(--muted);}
+.lb-score{font-size:18px;font-weight:900;color:var(--accent);flex-shrink:0;}
+.lb-empty{text-align:center;padding:48px 20px;color:var(--muted);font-size:14px;line-height:1.6;}
+
+.rb-score-live{font-size:22px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;min-height:26px;transition:transform .1s;}
+.lb-filter-bar{display:flex;gap:8px;padding:12px 16px 4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;background:var(--bg);flex-shrink:0;}
+.lb-filter-bar::-webkit-scrollbar{display:none;}
+.lb-filter-btn{padding:7px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s;}
+.lb-filter-btn.active{background:var(--grad);color:#fff;border-color:transparent;}
+.prev-winners{padding:0 16px 12px;}
+.pw-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;}
+.pw-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border-radius:14px;margin-bottom:6px;border:1px solid var(--border);}
+.pw-rank{font-size:20px;width:28px;text-align:center;flex-shrink:0;}
+.pw-img{width:44px;height:44px;border-radius:10px;object-fit:cover;flex-shrink:0;}
+.pw-info{flex:1;min-width:0;}
+.pw-info h4{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pw-info p{font-size:11px;color:var(--muted);}
+.pw-score{font-size:16px;font-weight:900;color:var(--accent);flex-shrink:0;}
+/* Winner reveal — all 3 on one screen */
+#winner-reveal{position:fixed;inset:0;z-index:3000;background:#000;overflow:hidden;cursor:pointer;}
+#winner-reveal.hidden{display:none;}
+.wr-slide-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(22px) brightness(.3);transform:scale(1.1);transition:background-image .3s;}
+.wr-slide-content{position:relative;z-index:1;width:100%;display:flex;flex-direction:column;align-items:center;padding:env(safe-area-inset-top,28px) 24px env(safe-area-inset-bottom,28px);min-height:100vh;justify-content:center;}
+.wr-medal-big{font-size:80px;line-height:1;text-align:center;animation:wrPop .45s cubic-bezier(.34,1.56,.64,1) both;}
+@keyframes wrPop{from{transform:scale(.3) rotate(-20deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+.wr-congrats{font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:8px;text-align:center;}
+.wr-place-title{font-size:28px;font-weight:900;color:#fff;text-align:center;margin-top:2px;}
+.wr-slide-photo{width:220px;height:220px;object-fit:cover;border-radius:22px;margin:18px 0 14px;display:block;box-shadow:0 8px 40px rgba(0,0,0,.6);}
+.wr-slide-name{font-size:22px;font-weight:900;color:#fff;text-align:center;}
+.wr-slide-score{font-size:20px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;margin-top:5px;}
+.wr-slide-city{font-size:13px;color:rgba(255,255,255,.4);text-align:center;margin-top:5px;}
+.wr-progress{display:flex;gap:7px;justify-content:center;margin-top:22px;}
+.wr-prog-dot{width:32px;height:4px;border-radius:2px;background:rgba(255,255,255,.2);transition:background .25s,width .25s;}
+.wr-prog-dot.active{background:#ffd700;width:48px;}
+.wr-tap-hint{font-size:12px;color:rgba(255,255,255,.28);text-align:center;margin-top:14px;letter-spacing:.5px;}
+
+/* ── Streak ring on profile emoji ── */
+.streak-ring-0{box-shadow:none;}
+.streak-ring-1{box-shadow:0 0 0 3px #3b82f6,0 0 14px rgba(59,130,246,.5);}
+.streak-ring-2{box-shadow:0 0 0 3px #22c55e,0 0 14px rgba(34,197,94,.5);}
+.streak-ring-3{box-shadow:0 0 0 3px #f97316,0 0 14px rgba(249,115,22,.5);}
+.streak-ring-4{box-shadow:0 0 0 3px #ef4444,0 0 14px rgba(239,68,68,.5);}
+.streak-ring-5{box-shadow:0 0 0 4px #ffd700,0 0 18px rgba(255,215,0,.6);}
+/* ── Profile stats ── */
+.prof-stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0 8px;}
+.pstat-box{background:var(--card);border-radius:14px;padding:12px 6px;text-align:center;border:1px solid var(--border);}
+.pstat-num{font-size:22px;font-weight:900;}
+.pstat-lbl{font-size:10px;color:var(--muted);margin-top:2px;font-weight:600;}
+.votes-given-row{display:flex;gap:8px;margin-bottom:12px;}
+.vg-box{flex:1;background:var(--card);border-radius:14px;padding:10px 8px;text-align:center;border:1px solid var(--border);}
+.vg-num{font-size:18px;font-weight:900;}
+.vg-num.pos{color:#22c55e;}
+.vg-num.neg{color:#ef4444;}
+.vg-lbl{font-size:10px;color:var(--muted);font-weight:600;}
+.streak-badge-inline{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(255,165,0,.15);color:#ffa500;border:1px solid rgba(255,165,0,.3);margin-top:4px;}
+/* ── Share card ── */
+.share-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:16px;margin-bottom:12px;}
+.share-card-row{display:flex;align-items:center;gap:14px;}
+.share-card-emoji{font-size:42px;width:64px;height:64px;background:var(--bg);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.share-card-text h3{font-size:17px;font-weight:900;margin:0 0 2px;}
+.share-card-text p{font-size:12px;color:var(--muted);margin:0;}
+.share-wins{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.share-win-badge{font-size:13px;font-weight:700;background:var(--bg);padding:3px 8px;border-radius:10px;}
+.share-btn{width:100%;margin-top:12px;padding:10px;border-radius:14px;background:var(--grad);color:#fff;border:none;font-weight:700;cursor:pointer;font-size:14px;}
+/* ── Gold vote floating button ── */
+.gold-vote-float{position:absolute;bottom:130px;left:16px;padding:9px 16px;border-radius:22px;border:none;background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;font-weight:800;font-size:13px;cursor:pointer;z-index:20;transition:opacity .15s;letter-spacing:.2px;}
+.gold-vote-float:disabled{opacity:.4;cursor:default;pointer-events:none;}
+.gold-vote-float.used{background:rgba(0,0,0,.6);color:rgba(255,255,255,.45);border:1.5px solid rgba(255,255,255,.2);backdrop-filter:blur(8px);}
+/* Reset password screen */
+#reset-pw-screen{position:fixed;inset:0;z-index:5000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px;}
+#reset-pw-screen.hidden{display:none;}
+.reset-pw-box{width:100%;max-width:380px;background:var(--card);border-radius:20px;padding:28px 24px;display:flex;flex-direction:column;gap:16px;}
+.reset-pw-box h2{font-size:20px;font-weight:900;color:#fff;text-align:center;margin:0;}
+.reset-pw-box input{width:100%;padding:13px 16px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:#fff;font-size:15px;outline:none;box-sizing:border-box;}
+.reset-pw-box button{width:100%;padding:14px;border-radius:14px;border:none;background:var(--grad);color:#fff;font-weight:800;font-size:15px;cursor:pointer;}
+.reset-pw-msg{font-size:13px;color:var(--muted);text-align:center;min-height:18px;}
+/* ── Duel card in Top tab ── */
+.duel-card{background:var(--card);border-radius:20px;margin:12px 16px;border:2px solid #ffd700;overflow:hidden;}
+.duel-header{background:linear-gradient(135deg,#ffd700,#ff8c00);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;}
+.duel-header h3{color:#000;font-size:14px;font-weight:900;margin:0;}
+.duel-header span{color:#000;font-size:12px;font-weight:700;}
+.duel-photos{display:grid;grid-template-columns:1fr 1fr;position:relative;}
+.duel-divider{position:absolute;left:50%;top:0;bottom:0;width:3px;background:linear-gradient(135deg,#ffd700,#ff8c00);z-index:2;}
+.duel-side{position:relative;cursor:pointer;transition:opacity .15s;}
+.duel-side img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;}
+.duel-placeholder{width:100%;aspect-ratio:3/4;background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;text-align:center;padding:8px;}
+.duel-city-lbl{position:absolute;bottom:0;left:0;right:0;padding:8px;background:linear-gradient(transparent,rgba(0,0,0,.85));color:#fff;font-weight:800;font-size:13px;text-align:center;}
+.duel-voted-side{opacity:.6;}
+.duel-check{position:absolute;top:8px;right:8px;background:#ffd700;color:#000;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;z-index:3;}
+.duel-vote-bar{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);border-top:1px solid var(--border);}
+.dvb-side{padding:8px 12px;font-size:13px;font-weight:700;text-align:center;color:var(--muted);}
+.dvb-side.winning{color:#ffd700;}
+.duel-tap-hint{font-size:11px;color:var(--muted);text-align:center;padding:6px 0;}
+</style>
 </head>
-<body>
-  <p>Loading PicTop...</p>
-  <script>window.location.href = 'https://pictop.ro';</script>
+<body class="dark">
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="load-logo">PicTop</div>
+  <div class="load-bar"><div class="load-fill"></div></div>
+</div>
+
+<!-- LOGIN -->
+<div id="s-login" class="screen hidden">
+  <div class="logo">PicTop</div>
+  <div class="logo-sub">Cucerește orașul cu o singură poză</div>
+  <div class="auth-card">
+    <div class="auth-title">Bun venit!</div>
+    <div id="google-btn-container"></div>
+    <div class="divider">sau</div>
+    <div class="inp-wrap"><label>Email</label><input type="email" id="l-email" placeholder="email@exemplu.ro" autocomplete="email"></div>
+    <div class="inp-wrap"><label>Parolă</label><input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password"></div>
+    <div class="err-msg" id="l-err"></div>
+    <button class="btn btn-primary" onclick="doLogin()">Intră în cont</button>
+    <div class="link-row">
+      <span class="link-btn" onclick="showScreen('s-register')">Cont nou</span>
+      <span class="link-btn muted" onclick="showScreen('s-forgot')">Am uitat parola</span>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div id="s-register" class="screen hidden">
+  <div class="logo">PicTop</div>
+  <div class="logo-sub">Creează-ți contul</div>
+  <div class="auth-card" style="max-height:85vh;overflow-y:auto;">
+    <div class="auth-title">Înregistrare</div>
+    <div class="inp-wrap"><label>Prenume</label><input type="text" id="r-name" placeholder="Ion"></div>
+    <div class="inp-wrap"><label>Nume</label><input type="text" id="r-surname" placeholder="Popescu"></div>
+    <div class="inp-wrap"><label>Nume utilizator</label><input type="text" id="r-username" placeholder="ionpop" autocomplete="username"></div>
+    <div class="inp-wrap"><label>Email</label><input type="email" id="r-email" placeholder="email@exemplu.ro" autocomplete="email"></div>
+    <div class="inp-wrap"><label>Parolă</label><input type="password" id="r-pass" placeholder="Min. 6 caractere" autocomplete="new-password"></div>
+    <div class="inp-wrap">
+      <label>Oraș</label>
+      <select id="r-city"><option value="">Selectează...</option></select>
+    </div>
+    <div class="inp-wrap">
+      <label>Emoji profil</label>
+      <div class="emoji-pick-btn" id="r-epick" onclick="toggleEmoji('r')">😊</div>
+      <div class="emoji-grid hidden" id="r-egrid"></div>
+      <input type="hidden" id="r-emoji" value="😊">
+    </div>
+    <label class="age-check">
+      <input type="checkbox" id="r-age">
+      <span>Confirm că am cel puțin <strong>18 ani</strong> și accept termenii.</span>
+    </label>
+    <div class="err-msg" id="r-err"></div>
+    <button class="btn btn-primary" onclick="doRegister()">Creează cont</button>
+    <button class="btn btn-ghost" onclick="showScreen('s-login')">← Înapoi</button>
+  </div>
+</div>
+
+<!-- FORGOT -->
+<div id="s-forgot" class="screen hidden">
+  <div class="logo">PicTop</div>
+  <div class="auth-card">
+    <div class="auth-title">Resetare parolă</div>
+    <div class="inp-wrap"><label>Email</label><input type="email" id="f-email" placeholder="email@exemplu.ro"></div>
+    <div class="ok-msg hidden" id="f-ok">Link trimis! Verifică emailul.</div>
+    <div class="err-msg" id="f-err"></div>
+    <button class="btn btn-primary" onclick="doForgot()">Trimite link</button>
+    <button class="btn btn-ghost" onclick="showScreen('s-login')">← Înapoi</button>
+  </div>
+</div>
+
+<!-- GOOGLE SETUP -->
+<div id="s-gsetup" class="screen hidden">
+  <div class="logo">PicTop</div>
+  <div class="logo-sub">Un pas mic...</div>
+  <div class="auth-card">
+    <div class="auth-title">Completează profilul</div>
+    <div class="inp-wrap"><label>Nume utilizator</label><input type="text" id="gs-user" placeholder="username unic"></div>
+    <div class="inp-wrap">
+      <label>Oraș</label>
+      <select id="gs-city"><option value="">Selectează...</option></select>
+    </div>
+    <div class="inp-wrap">
+      <label>Emoji profil</label>
+      <div class="emoji-pick-btn" id="gs-epick" onclick="toggleEmoji('gs')">😊</div>
+      <div class="emoji-grid hidden" id="gs-egrid"></div>
+      <input type="hidden" id="gs-emoji" value="😊">
+    </div>
+    <label class="age-check">
+      <input type="checkbox" id="gs-age">
+      <span>Confirm că am cel puțin <strong>18 ani</strong>.</span>
+    </label>
+    <div class="err-msg" id="gs-err"></div>
+    <button class="btn btn-primary" onclick="finishGoogleSetup()">Gata!</button>
+    <button class="btn btn-ghost" onclick="showScreen('s-login')">← Înapoi</button>
+  </div>
+</div>
+
+<!-- CAMERA LOADING -->
+<div class="cam-load hidden" id="cam-load">
+  <div class="spinner"></div>
+  <p>Camera te așteaptă...</p>
+</div>
+<input type="file" id="photo-input" accept="image/*" capture="environment">
+
+<!-- CITY FILTER SHEET -->
+<div class="sheet-backdrop hidden" id="city-sheet" onclick="closeCitySheet(event)">
+  <div class="bottom-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Selectează orașul</div>
+    <input class="sheet-search" id="city-search" placeholder="Caută oraș..." oninput="filterCities()">
+    <div class="city-list" id="city-list"></div>
+  </div>
+</div>
+
+<!-- WINNER REVEAL OVERLAY -->
+<div id="winner-reveal" class="hidden" onclick="nextWinnerSlide()">
+  <div class="wr-slide-bg" id="wr-bg"></div>
+  <div class="wr-slide-content">
+    <div class="wr-medal-big" id="wr-medal-big">🥇</div>
+    <div class="wr-congrats" id="wr-congrats">🎉 Felicitări!</div>
+    <div class="wr-place-title" id="wr-place-title">Câştigătorul zilei</div>
+    <img class="wr-slide-photo" id="wr-slide-photo" src="" alt="" onerror="this.style.display='none'">
+    <div class="wr-slide-name" id="wr-slide-name"></div>
+    <div class="wr-slide-score" id="wr-slide-score"></div>
+    <div class="wr-slide-city" id="wr-slide-city"></div>
+    <div class="wr-progress">
+      <div class="wr-prog-dot active" id="wr-pd-0"></div>
+      <div class="wr-prog-dot" id="wr-pd-1"></div>
+      <div class="wr-prog-dot" id="wr-pd-2"></div>
+    </div>
+    <div class="wr-tap-hint" id="wr-tap-hint">Apasă pentru a continua</div>
+  </div>
+</div>
+
+<!-- EMOJI EDIT MODAL -->
+<div class="modal-back hidden" id="emoji-modal">
+  <div class="modal-sheet">
+    <h2 style="margin-bottom:14px;">Schimbă emoji</h2>
+    <div class="emoji-grid" id="prof-egrid" style="max-height:300px;"></div>
+    <button class="modal-close" onclick="document.getElementById('emoji-modal').classList.add('hidden')">Anulează</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" class="hidden">
+
+  <!-- FEED TAB -->
+  <div id="feed-tab">
+
+    <!-- Top bar -->
+    <div class="top-bar">
+      <div class="top-bar-row">
+        <div class="app-logo">PicTop</div>
+        <div class="top-actions">
+          <span id="round-timer"></span>
+          <button class="icon-btn" onclick="openCitySheet()" style="padding:6px 10px;gap:6px;align-items:center;">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            <div style="display:flex;flex-direction:column;align-items:flex-start;gap:1px;">
+              <span style="font-size:9px;opacity:.65;font-weight:600;text-transform:uppercase;letter-spacing:.3px;line-height:1;">Selectează Orașul</span>
+              <span id="city-btn-label" style="font-size:12px;line-height:1.2;">Toate</span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Photo -->
+    <div class="photo-wrap" id="photo-wrap">
+      <img id="photo-img" src="" alt="">
+      <div class="photo-grad"></div>
+      <div class="tap-zone" id="tap-zone"></div>
+
+      <!-- Score -->
+      <div class="score-pill zero" id="score-pill">0 pt</div>
+
+      <!-- User info -->
+      <div class="photo-user">
+        <div class="photo-emoji-lbl" id="p-emoji"></div>
+        <div class="photo-uname" id="p-uname"></div>
+        <div class="photo-ucity" id="p-city"></div>
+        <div class="photo-time" id="p-time"></div>
+      </div>
+
+      <!-- Rating sidebar -->
+      <div class="rating-bar" id="rating-bar">
+        <div class="rb-label" id="rb-max">+5</div>
+        <div class="rb-track" id="rb-track">
+          <div class="rb-fill-pos" id="rb-pos" style="height:0"></div>
+          <div class="rb-fill-neg" id="rb-neg" style="height:0"></div>
+          <div class="rb-handle" id="rb-handle"></div>
+        </div>
+        <div class="rb-label" id="rb-min">-5</div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="photo-actions">
+        <button class="act-btn" onclick="reportPhoto()" title="Raportează">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+        </button>
+      </div>
+
+      <button class="gold-vote-float" id="gold-vote-btn" onclick="sendGoldVote()" style="display:none;">🌟 Vot de Aur</button>
+      <div class="tap-hint">Apasă poza pentru următoarea</div>
+    </div>
+
+    <!-- Empty -->
+    <div class="empty-feed hidden" id="empty-feed">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+      <p>Nicio poză în <strong id="empty-city">orașul tău</strong> azi.</p>
+      <p style="font-size:13px;margin-top:4px;">Fii primul care postează!</p>
+    </div>
+
+    <!-- Bottom nav -->
+    <div class="bnav">
+      <button class="bnav-btn on" id="nav-feed" onclick="switchTab('feed')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+        <span>PIC</span>
+      </button>
+      <button class="bnav-btn" id="nav-top" onclick="switchTab('top')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+        <span>Top</span>
+      </button>
+      <button class="bnav-btn" id="nav-prof" onclick="switchTab('profile')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span>Profil</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- PROFILE TAB -->
+  <div id="profile-tab" class="hidden">
+
+    <!-- Header -->
+    <div class="prof-header">
+      <div class="prof-emoji" id="prof-emoji" onclick="openEmojiEdit()">😊</div>
+      <div class="prof-meta">
+        <h2 id="prof-uname">@username</h2>
+        <p id="prof-full">Nume Prenume</p>
+        <p id="prof-city-lbl" style="font-size:12px;color:var(--muted);margin-top:2px;"></p>
+        <div id="prof-badge" class="rank-badge rb0">Utilizator</div>
+        <div id="prof-streak-badge" class="streak-badge-inline" style="display:none;">🔥 0 zile streak</div>
+      </div>
+    </div>
+
+    <div class="sec-title">Poza ta de azi</div>
+
+    <!-- No photo -->
+    <div class="post-card" id="post-card" onclick="openCamera()">
+      <div class="post-icon">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </div>
+      <h3>Camera te așteaptă</h3>
+      <p>Postează și intră în top azi</p>
+    </div>
+
+    <!-- Has photo -->
+    <div class="my-card hidden" id="my-card">
+      <img id="my-img" src="" alt="">
+      <div class="my-card-stats">
+        <div class="my-score pos" id="my-score">0</div>
+        <div class="my-votes-lbl" id="my-votes">0 voturi</div>
+      </div>
+    </div>
+
+    <!-- Rank -->
+    <div class="sec-title">Privilegii runda aceasta</div>
+    <div class="rank-card">
+      <div class="rank-icon-wrap" id="rank-icon-wrap">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      </div>
+      <div class="rank-info">
+        <h4 id="rank-title">Utilizator normal</h4>
+        <p id="rank-desc">1 poză/zi • Notă de la -5 la +5</p>
+      </div>
+    </div>
+
+    <!-- Win stats + votes given -->
+    <div class="sec-title">Statistici</div>
+    <div class="prof-stats-grid">
+      <div class="pstat-box"><div class="pstat-num" id="stat-1st">0</div><div class="pstat-lbl">🥇 Locul 1</div></div>
+      <div class="pstat-box"><div class="pstat-num" id="stat-2nd">0</div><div class="pstat-lbl">🥈 Locul 2</div></div>
+      <div class="pstat-box"><div class="pstat-num" id="stat-3rd">0</div><div class="pstat-lbl">🥉 Locul 3</div></div>
+    </div>
+    <div class="votes-given-row">
+      <div class="vg-box"><div class="vg-num pos" id="stat-pos">+0</div><div class="vg-lbl">Puncte date +</div></div>
+      <div class="vg-box"><div class="vg-num neg" id="stat-neg">-0</div><div class="vg-lbl">Puncte date −</div></div>
+    </div>
+
+    <!-- Share card -->
+    <div class="share-card">
+      <div class="share-card-row">
+        <div class="share-card-emoji" id="sc-emoji">😊</div>
+        <div class="share-card-text">
+          <h3 id="sc-uname">@username</h3>
+          <p id="sc-city">Oraș</p>
+          <div class="share-wins" id="sc-wins"></div>
+        </div>
+      </div>
+      <button class="share-btn" onclick="shareProfile()">📤 Partajează profilul</button>
+    </div>
+
+    <!-- Themes -->
+    <div class="sec-title">Temă aplicație</div>
+    <div class="theme-row">
+      <div class="theme-dot t-dark sel" id="th-dark" onclick="setTheme('dark')" title="Dark">
+        <svg fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24" width="18" height="18"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </div>
+      <div class="theme-dot t-light" id="th-light" onclick="setTheme('light')" title="Light">
+        <svg fill="none" stroke="#111" stroke-width="2" viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      </div>
+      <div class="theme-dot t-ocean" id="th-ocean" onclick="setTheme('ocean')" title="Ocean">
+        <svg fill="none" stroke="#4a9eff" stroke-width="2" viewBox="0 0 24 24" width="18" height="18"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+      </div>
+      <div class="theme-dot t-purple" id="th-purple" onclick="setTheme('purple')" title="Purple">
+        <svg fill="none" stroke="#a78bfa" stroke-width="2" viewBox="0 0 24 24" width="18" height="18"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </div>
+    </div>
+
+    <!-- Logout -->
+    <button class="btn btn-ghost" style="margin-top:8px;" onclick="doLogout()">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16" height="16" style="vertical-align:middle;margin-right:6px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Ieși din cont
+    </button>
+
+    <!-- Bottom nav -->
+    <div class="bnav" style="position:fixed;">
+      <button class="bnav-btn" id="nav-feed-2" onclick="switchTab('feed')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+        <span>PIC</span>
+      </button>
+      <button class="bnav-btn" id="nav-top-2" onclick="switchTab('top')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+        <span>Top</span>
+      </button>
+      <button class="bnav-btn on" id="nav-prof-2" onclick="switchTab('profile')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span>Profil</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- TOP TAB -->
+  <div id="top-tab" class="hidden">
+    <div class="top-hero">
+      <h2>&#127942; Top Azi</h2>
+      <p>Clasament <span id="lb-city-name">ora&#351;</span></p>
+    </div>
+    <div id="duel-container" style="display:none;"></div>
+    <div id="lb-filter-bar" class="lb-filter-bar"></div>
+    <div id="lb-prev-winners" class="prev-winners" style="display:none;"></div>
+    <div id="lb-podium" class="podium-wrap"></div>
+    <div id="lb-list" class="lb-section"></div>
+    <div class="bnav" style="position:fixed;bottom:0;left:0;right:0;">
+      <button class="bnav-btn" id="nav-feed-3" onclick="switchTab('feed')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+        <span>PIC</span>
+      </button>
+      <button class="bnav-btn on" id="nav-top-3" onclick="switchTab('top')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+        <span>Top</span>
+      </button>
+      <button class="bnav-btn" id="nav-prof-3" onclick="switchTab('profile')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span>Profil</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer onload="initGoogleBtn()"></script>
+<script>
+const GCID = '670177753227-ma432dtr8bn6lbsdmob6vvlkabnmha38.apps.googleusercontent.com';
+
+let authToken = localStorage.getItem('pictopToken');
+let currentUser = null;
+let photos = [], currentIdx = 0, selectedCity = null;
+let pendingGoogleData = null;
+let cities = [], emojis = [];
+
+// ── Theme ──────────────────────────────────────────────────────────────────
+function setTheme(t) {
+    document.body.className = t;
+    localStorage.setItem('pictopTheme', t);
+    ['dark','light','ocean','purple'].forEach(x => {
+        document.getElementById('th-' + x)?.classList.toggle('sel', x === t);
+    });
+}
+(function(){ setTheme(localStorage.getItem('pictopTheme') || 'dark'); })();
+
+// ── Socket ────────────────────────────────────────────────────────────────
+let socket = null;
+function initSocket() {
+    if (typeof io === 'undefined') return;
+    socket = io();
+    socket.on('score_update', ({ photo_id, score, vote_count }) => {
+        const p = photos.find(x => x.id === photo_id);
+        if (p) { p.score = score; p.vote_count = vote_count; }
+        if (photos[currentIdx]?.id === photo_id) updateScorePill(score);
+    });
+    socket.on('photo_deleted', ({ photo_id }) => {
+        photos = photos.filter(x => x.id !== photo_id);
+        if (currentIdx >= photos.length) currentIdx = Math.max(0, photos.length - 1);
+        showPhoto();
+    });
+    socket.on('round_reset', ({ winners }) => {
+        photos = []; currentIdx = 0; showPhoto();
+        if (currentUser) {
+            const w = winners[currentUser.city] || [];
+            if (w.length) {
+                const nowRO = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Bucharest" }));
+                const todayKey = "winners_seen_" + nowRO.toISOString().slice(0, 10);
+                localStorage.setItem(todayKey, "1");
+                showWinners(currentUser.city, w);
+            }
+        }
+        loadDuel();
+    });
+    socket.emit('auth', authToken);
+    socket.on('gold_vote_received', ({ from }) => {
+        showToast('🌟 @' + from + ' ți-a dat Votul de Aur!', 4000);
+    });
+    socket.on('entered_top3', () => {
+        showToast('🏆 Ești în Top 3 azi! Continuă!', 4000);
+    });
+    socket.on('one_hour_left', ({ message }) => {
+        showToast(message, 5000);
+    });
+    socket.on('duel_update', ({ duel_id, votes_city1, votes_city2 }) => {
+        updateDuelVotes(duel_id, votes_city1, votes_city2);
+    });
+    socket.on('duel_photo_update', () => {
+        loadDuel();
+    });
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+async function init() {
+    [cities, emojis] = await Promise.all([
+        fetch('/api/cities').then(r => r.json()).catch(() => []),
+        fetch('/api/emojis').then(r => r.json()).catch(() => [])
+    ]);
+    populateCities(); populateEmojis();
+    if (authToken) {
+        const ok = await loadProfile();
+        if (ok) { showApp(); return; }
+    }
+    hideLoading(); showScreen('s-login');
+}
+
+async function loadProfile() {
+    try {
+        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${authToken}` } });
+        if (!r.ok) { authToken = null; localStorage.removeItem('pictopToken'); return false; }
+        currentUser = await r.json(); return true;
+    } catch { return false; }
+}
+
+function showApp() {
+    hideLoading();
+    ['s-login','s-register','s-forgot','s-gsetup'].forEach(function(s) {
+        var el = document.getElementById(s); if (el) el.classList.add('hidden');
+    });
+    document.getElementById('app').classList.remove('hidden');
+    updateProfileUI(); initSocket(); loadFeed(); loadMyPhoto(); showWinnersIfAny(); startTimer(); checkGoldVote(); loadDuel();
+    if (new URLSearchParams(window.location.search).get('pw_reset')) {
+        showToast('🔐 Parolă schimbată! Bine ai revenit 👋', 4000);
+        window.history.replaceState({}, '', '/');
+    }
+}
+function hideLoading() { document.getElementById('loading').classList.add('hidden'); }
+
+// ── Screens ───────────────────────────────────────────────────────────────
+function showScreen(id) {
+    ['s-login','s-register','s-forgot','s-gsetup'].forEach(s => {
+        document.getElementById(s).classList.add('hidden');
+    });
+    document.getElementById(id).classList.remove('hidden');
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────────
+async function doLogin() {
+    const email = document.getElementById('l-email').value.trim();
+    const pass = document.getElementById('l-pass').value;
+    const err = document.getElementById('l-err');
+    err.textContent = '';
+    if (!email || !pass) { err.textContent = 'Completează toate câmpurile'; return; }
+    const r = await fetch('/api/auth/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ email, password: pass }) });
+    const data = await r.json();
+    if (!r.ok) { err.textContent = data.error; return; }
+    authToken = data.token; currentUser = data.user;
+    localStorage.setItem('pictopToken', authToken); showApp();
+}
+
+async function doRegister() {
+    const err = document.getElementById('r-err'); err.textContent = '';
+    const body = {
+        name: document.getElementById('r-name').value.trim(),
+        surname: document.getElementById('r-surname').value.trim(),
+        username: document.getElementById('r-username').value.trim(),
+        email: document.getElementById('r-email').value.trim(),
+        password: document.getElementById('r-pass').value,
+        city: document.getElementById('r-city').value,
+        emoji: document.getElementById('r-emoji').value,
+        age_confirmed: document.getElementById('r-age').checked
+    };
+    if (!body.name || !body.surname || !body.username || !body.email || !body.password || !body.city)
+        { err.textContent = 'Completează toate câmpurile'; return; }
+    if (!body.age_confirmed) { err.textContent = 'Confirmă că ai 18+ ani'; return; }
+    const r = await fetch('/api/auth/register', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const data = await r.json();
+    if (!r.ok) { err.textContent = data.error; return; }
+    authToken = data.token; currentUser = data.user;
+    localStorage.setItem('pictopToken', authToken); showApp();
+}
+
+async function doForgot() {
+    const email = document.getElementById('f-email').value.trim();
+    const err = document.getElementById('f-err');
+    const ok = document.getElementById('f-ok');
+    err.textContent = ''; ok.classList.add('hidden');
+    if (!email) { err.textContent = 'Introdu emailul'; return; }
+    await fetch('/api/auth/forgot-password', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ email }) });
+    ok.classList.remove('hidden');
+}
+
+function doLogout() {
+    authToken = null; currentUser = null;
+    localStorage.removeItem('pictopToken');
+    location.reload();
+}
+
+// ── Google ────────────────────────────────────────────────────────────────
+function initGoogleBtn() {
+    if (!window.google) return;
+    google.accounts.id.initialize({ client_id: GCID, callback: handleGoogleCredential });
+    google.accounts.id.renderButton(document.getElementById('google-btn-container'),
+        { theme: 'outline', size: 'large', width: 340, text: 'continue_with', shape: 'rectangular' });
+}
+
+async function handleGoogleCredential(response) {
+    const r = await fetch('/api/auth/google', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ credential: response.credential }) });
+    const data = await r.json();
+    if (data.needs_setup) { pendingGoogleData = { ...data, credential: response.credential }; showScreen('s-gsetup'); return; }
+    if (!r.ok) { document.getElementById('l-err').textContent = data.error; return; }
+    authToken = data.token; currentUser = data.user;
+    localStorage.setItem('pictopToken', authToken); showApp();
+}
+
+async function finishGoogleSetup() {
+    const err = document.getElementById('gs-err'); err.textContent = '';
+    const body = {
+        google_id: pendingGoogleData?.google_id,
+        email: pendingGoogleData?.email,
+        name: pendingGoogleData?.name,
+        surname: pendingGoogleData?.surname,
+        credential: pendingGoogleData?.credential,
+        username: document.getElementById('gs-user').value.trim(),
+        city: document.getElementById('gs-city').value,
+        emoji: document.getElementById('gs-emoji').value,
+        age_confirmed: document.getElementById('gs-age').checked
+    };
+    if (!body.username || !body.city) { err.textContent = 'Completează toate câmpurile'; return; }
+    if (!body.age_confirmed) { err.textContent = 'Confirmă că ai 18+ ani'; return; }
+    const r = await fetch('/api/auth/google', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const data = await r.json();
+    if (!r.ok) { err.textContent = data.error; return; }
+    authToken = data.token; currentUser = data.user;
+    localStorage.setItem('pictopToken', authToken); showApp();
+}
+
+// ── City filter sheet ─────────────────────────────────────────────────────
+function openCitySheet() {
+    document.getElementById('city-sheet').classList.remove('hidden');
+    document.getElementById('city-search').value = '';
+    filterCities();
+    setTimeout(() => document.getElementById('city-search').focus(), 100);
+}
+function closeCitySheet(e) {
+    if (e.target === document.getElementById('city-sheet')) document.getElementById('city-sheet').classList.add('hidden');
+}
+function filterCities() {
+    const q = document.getElementById('city-search').value.toLowerCase();
+    const list = document.getElementById('city-list');
+    const myCity = currentUser?.city || '';
+    const all = ['Toate', myCity, ...cities.filter(c => c !== myCity)];
+    list.innerHTML = all
+        .filter(c => c.toLowerCase().includes(q))
+        .map(c => {
+            const isSel = (c === 'Toate' && !selectedCity) || c === selectedCity;
+            return `<div class="city-item ${isSel ? 'active-city' : ''}" onclick="selectCity('${c}')">
+                ${c}
+                ${isSel ? '<svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+            </div>`;
+        }).join('');
+}
+function selectCity(c) {
+    selectedCity = c === 'Toate' ? null : c;
+    document.getElementById('city-btn-label').textContent = selectedCity || 'Toate';
+    document.getElementById('city-sheet').classList.add('hidden');
+    loadFeed(selectedCity);
+}
+
+// ── Feed ──────────────────────────────────────────────────────────────────
+async function loadFeed(city) {
+    const c = city || '';
+    const url = `/api/photos/feed?city=${encodeURIComponent(c)}`;
+    photos = await fetch(url, { headers: { Authorization: `Bearer ${authToken}` } }).then(r => r.json()).catch(() => []);
+    currentIdx = 0; showPhoto();
+}
+
+function showPhoto() {
+    const wrap = document.getElementById('photo-wrap');
+    const empty = document.getElementById('empty-feed');
+    if (!photos || !photos.length) {
+        wrap.style.display = 'none'; empty.classList.remove('hidden');
+        document.getElementById('empty-city').textContent = selectedCity || currentUser?.city || 'tău';
+        return;
+    }
+    wrap.style.display = 'block'; empty.classList.add('hidden');
+    const p = photos[currentIdx];
+    if (!p) return;
+    document.getElementById('photo-img').src = `/uploads/${p.filename}`;
+    document.getElementById('p-emoji').textContent = p.emoji || '😊';
+    document.getElementById('p-uname').textContent = '@' + p.username;
+    document.getElementById('p-city').textContent = p.user_city || p.city;
+    document.getElementById('p-time').textContent = timeAgo(p.created_at);
+    updateScorePill(p.score);
+
+    // Tap to next
+    const tap = document.getElementById('tap-zone');
+    tap.onclick = nextPhoto;
+
+    // Rating
+    const maxScore = currentUser?.prev_rank === 1 ? 10 : currentUser?.prev_rank === 2 ? 7 : 5;
+    const bar = document.getElementById('rating-bar');
+    if (p.my_vote !== null && p.my_vote !== undefined) {
+        bar.innerHTML = `<div class="rb-voted"><div class="rb-voted-lbl">Ai votat</div><div class="rb-voted-val">${p.my_vote > 0 ? '+' : ''}${p.my_vote}</div></div>`;
+    } else {
+        bar.innerHTML = `
+          <div class="rb-label" id="rb-max">+${maxScore}</div>
+          <div class="rb-score-live" id="rb-live">0</div>
+          <div class="rb-track" id="rb-track">
+            <div class="rb-fill-pos" id="rb-pos" style="height:0"></div>
+            <div class="rb-fill-neg" id="rb-neg" style="height:0"></div>
+            <div class="rb-handle" id="rb-handle"></div>
+          </div>
+          <div class="rb-label" id="rb-min">-${maxScore}</div>`;
+        initRating(maxScore, p.id);
+    }
+}
+
+function nextPhoto() {
+    if (!photos.length) return;
+    currentIdx = (currentIdx + 1) % photos.length;
+    showPhoto();
+    updateGoldVoteBtn();
+}
+
+function updateScorePill(score) {
+    const el = document.getElementById('score-pill');
+    if (!el) return;
+    el.textContent = (score > 0 ? '+' : '') + parseFloat(score || 0).toFixed(1) + ' pt';
+    el.className = 'score-pill ' + (score > 0 ? 'pos' : score < 0 ? 'neg' : 'zero');
+}
+
+// ── Rating slider ─────────────────────────────────────────────────────────
+function initRating(maxScore, photoId) {
+    const track = document.getElementById('rb-track');
+    if (!track) return;
+    let dragging = false, cur = 0;
+
+    function getScore(y) {
+        const rect = track.getBoundingClientRect();
+        const rel = Math.max(0, Math.min(1, (y - rect.top) / rect.height));
+        return Math.round(Math.max(-maxScore, Math.min(maxScore, (1 - rel) * 2 * maxScore - maxScore)));
+    }
+    function draw(v) {
+        const h = track.clientHeight;
+        const pct = (v / maxScore + 1) / 2;
+        const top = (1 - pct) * (h - 32);
+        const handle = document.getElementById('rb-handle');
+        if (handle) handle.style.top = top + 'px';
+        var live = document.getElementById('rb-live');
+        if (live) { live.textContent = (v > 0 ? '+' : '') + v; live.style.transform = 'scale(1.2)'; }
+        const pos = document.getElementById('rb-pos');
+        const neg = document.getElementById('rb-neg');
+        if (v >= 0) {
+            if (pos) { pos.style.height = (pct - 0.5) * h + 'px'; pos.style.bottom = '50%'; }
+            if (neg) neg.style.height = '0';
+        } else {
+            if (neg) { neg.style.height = (0.5 - pct) * h + 'px'; neg.style.top = '50%'; }
+            if (pos) pos.style.height = '0';
+        }
+    }
+
+    track.addEventListener('touchstart', e => { dragging = true; e.preventDefault(); }, { passive: false });
+    track.addEventListener('touchmove', e => { if (!dragging) return; e.preventDefault(); cur = getScore(e.touches[0].clientY); draw(cur); }, { passive: false });
+    track.addEventListener('touchend', async () => { if (!dragging) return; dragging = false; await submitVote(photoId, cur); });
+    track.addEventListener('mousedown', () => dragging = true);
+    document.addEventListener('mousemove', e => { if (!dragging) return; cur = getScore(e.clientY); draw(cur); });
+    document.addEventListener('mouseup', async () => { if (!dragging) return; dragging = false; await submitVote(photoId, cur); });
+}
+
+async function submitVote(photoId, score) {
+    const r = await fetch('/api/votes', { method: 'POST', headers: {'Content-Type':'application/json', Authorization: `Bearer ${authToken}`}, body: JSON.stringify({ photo_id: photoId, score }) });
+    const data = await r.json();
+    if (r.ok) {
+        const p = photos[currentIdx];
+        if (p && p.id === photoId) { p.my_vote = score; p.score = data.score; updateScorePill(data.score); }
+        const bar = document.getElementById('rating-bar');
+        if (bar) bar.innerHTML = `<div class="rb-voted"><div class="rb-voted-lbl">Ai votat</div><div class="rb-voted-val">${score > 0 ? '+' : ''}${score}</div></div>`;
+        setTimeout(nextPhoto, 700);
+    }
+}
+
+// ── Report ────────────────────────────────────────────────────────────────
+async function reportPhoto() {
+    const p = photos[currentIdx];
+    if (!p) return;
+    if (!confirm('Raportezi această poză ca inadecvată?')) return;
+    const r = await fetch('/api/reports', { method: 'POST', headers: {'Content-Type':'application/json', Authorization: `Bearer ${authToken}`}, body: JSON.stringify({ photo_id: p.id }) });
+    const data = await r.json();
+    alert(r.ok ? 'Poză raportată. Mulțumim!' : (data.error || 'Eroare'));
+    if (r.ok) nextPhoto();
+}
+
+// ── Profile ───────────────────────────────────────────────────────────────
+function updateProfileUI() {
+    if (!currentUser) return;
+    document.getElementById('prof-emoji').textContent = currentUser.emoji || '😊';
+    document.getElementById('prof-uname').textContent = '@' + currentUser.username;
+    document.getElementById('prof-full').textContent = currentUser.name + ' ' + currentUser.surname;
+    document.getElementById('prof-city-lbl').textContent = currentUser.city;
+    const rankMap = {
+        1: { label: 'Locul 1', cls: 'rb1', title: 'Campion', desc: '1 poză/zi • Notă -10 la +10' },
+        2: { label: 'Locul 2', cls: 'rb2', title: 'Finalist', desc: '2 poze/zi • Notă -7 la +7' },
+        3: { label: 'Locul 3', cls: 'rb3', title: 'Top 3', desc: '2 poze/zi • Notă -5 la +5' },
+        0: { label: 'Utilizator', cls: 'rb0', title: 'Utilizator normal', desc: '1 poză/zi • Notă -5 la +5' }
+    };
+    const rm = rankMap[currentUser.prev_rank || 0];
+    const badge = document.getElementById('prof-badge');
+    badge.textContent = rm.label; badge.className = 'rank-badge ' + rm.cls;
+    document.getElementById('rank-title').textContent = rm.title;
+    document.getElementById('rank-desc').textContent = rm.desc;
+
+    // Streak ring
+    const streak = currentUser.streak || 0;
+    const emojiEl = document.getElementById('prof-emoji');
+    if (emojiEl) {
+        emojiEl.className = emojiEl.className.replace(/\bstreak-ring-\d\b/g, '').trim();
+        const sClass = streak >= 30 ? 5 : streak >= 21 ? 4 : streak >= 14 ? 3 : streak >= 7 ? 2 : streak >= 3 ? 1 : 0;
+        emojiEl.classList.add('streak-ring-' + sClass);
+    }
+    const sb = document.getElementById('prof-streak-badge');
+    if (sb && streak > 0) { sb.textContent = '🔥 ' + streak + ' zile streak'; sb.style.display = 'inline-block'; }
+    else if (sb) sb.style.display = 'none';
+    // Win stats
+    const fmt = n => n > 999 ? (n/1000).toFixed(1)+'K' : String(n||0);
+    if (document.getElementById('stat-1st')) {
+        document.getElementById('stat-1st').textContent = fmt(currentUser.wins_1st);
+        document.getElementById('stat-2nd').textContent = fmt(currentUser.wins_2nd);
+        document.getElementById('stat-3rd').textContent = fmt(currentUser.wins_3rd);
+    }
+    if (document.getElementById('stat-pos')) {
+        document.getElementById('stat-pos').textContent = '+' + fmt(currentUser.total_pos_votes);
+        document.getElementById('stat-neg').textContent = '-' + fmt(currentUser.total_neg_votes);
+    }
+    // Share card
+    if (document.getElementById('sc-emoji')) {
+        document.getElementById('sc-emoji').textContent = currentUser.emoji || '😊';
+        document.getElementById('sc-uname').textContent = '@' + currentUser.username;
+        document.getElementById('sc-city').textContent = currentUser.city + (streak > 0 ? '  🔥' + streak : '');
+        document.getElementById('sc-wins').innerHTML =
+            (currentUser.wins_1st ? '<span class="share-win-badge">🥇×'+currentUser.wins_1st+'</span>' : '') +
+            (currentUser.wins_2nd ? '<span class="share-win-badge">🥈×'+currentUser.wins_2nd+'</span>' : '') +
+            (currentUser.wins_3rd ? '<span class="share-win-badge">🥉×'+currentUser.wins_3rd+'</span>' : '');
+    }
+    // Set current theme dots
+    const t = localStorage.getItem('pictopTheme') || 'dark';
+    ['dark','light','ocean','purple'].forEach(x => document.getElementById('th-'+x)?.classList.toggle('sel', x===t));
+}
+
+async function loadMyPhoto() {
+    const photos = await fetch('/api/photos/my', { headers: { Authorization: `Bearer ${authToken}` } }).then(r => r.json()).catch(() => []);
+    const pc = document.getElementById('post-card');
+    const mc = document.getElementById('my-card');
+    if (photos.length) {
+        pc.classList.add('hidden'); mc.classList.remove('hidden');
+        const p = photos[0];
+        document.getElementById('my-img').src = `/uploads/${p.filename}`;
+        const s = parseFloat(p.score || 0);
+        const se = document.getElementById('my-score');
+        se.textContent = (s > 0 ? '+' : '') + s.toFixed(1);
+        se.className = 'my-score ' + (s >= 0 ? 'pos' : 'neg');
+        document.getElementById('my-votes').textContent = `${p.vote_count} voturi • Runda curentă`;
+    } else {
+        pc.classList.remove('hidden'); mc.classList.add('hidden');
+    }
+}
+
+// ── Camera ────────────────────────────────────────────────────────────────
+function openCamera() {
+    document.getElementById('cam-load').classList.remove('hidden');
+    setTimeout(() => { document.getElementById('cam-load').classList.add('hidden'); document.getElementById('photo-input').click(); }, 800);
+}
+document.getElementById('photo-input').addEventListener('change', async e => {
+    const file = e.target.files[0]; if (!file) return;
+    const fd = new FormData(); fd.append('photo', file);
+    document.getElementById('cam-load').classList.remove('hidden');
+    const r = await fetch('/api/photos/upload', { method: 'POST', headers: { Authorization: `Bearer ${authToken}` }, body: fd });
+    document.getElementById('cam-load').classList.add('hidden');
+    if (r.ok) { loadMyPhoto(); loadFeed(selectedCity || currentUser?.city); switchTab('feed'); }
+    else { const d = await r.json(); alert(d.error || 'Eroare upload'); }
+    e.target.value = '';
+});
+
+// ── Tabs ──────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+    const feed = document.getElementById('feed-tab');
+    const prof = document.getElementById('profile-tab');
+    const topT = document.getElementById('top-tab');
+    feed.style.display = 'none';
+    prof.classList.add('hidden');
+    topT.classList.add('hidden');
+    ['nav-feed','nav-top','nav-prof'].forEach(id => document.getElementById(id)?.classList.remove('on'));
+    if (tab === 'feed') {
+        feed.style.display = '';
+        document.getElementById('nav-feed')?.classList.add('on');
+        updateGoldVoteBtn();
+    } else if (tab === 'top') {
+        loadDuel();
+        topT.classList.remove('hidden');
+        document.getElementById('nav-top-3')?.classList.add('on');
+        loadLeaderboard();
+    } else {
+        prof.classList.remove('hidden');
+        loadMyPhoto();
+    }
+}
+
+// ── Winners ───────────────────────────────────────────────────────────────
+async function showWinnersIfAny() {
+    if (!currentUser) return;
+    // Show winners only after 18:00 Romania time, and only once per day
+    const nowRO = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Bucharest" }));
+    if (nowRO.getHours() < 18) return;
+    const todayKey = "winners_seen_" + nowRO.toISOString().slice(0, 10);
+    if (localStorage.getItem(todayKey)) return;
+    const w = await fetch(`/api/winners?city=${encodeURIComponent(currentUser.city)}`).then(r => r.json()).catch(() => []);
+    if (w.length) {
+        localStorage.setItem(todayKey, "1");
+        showWinners(currentUser.city, w);
+    }
+}
+// showWinners — replaced by winner reveal below
+
+// ── Timer ─────────────────────────────────────────────────────────────────
+function startTimer() {
+    function upd() {
+        const now = new Date(), reset = new Date();
+        reset.setUTCHours(16, 0, 0, 0);
+        if (now > reset) reset.setDate(reset.getDate() + 1);
+        const d = reset - now;
+        const h = Math.floor(d / 3600000), m = Math.floor((d % 3600000) / 60000);
+        const el = document.getElementById('round-timer');
+        if (el) el.textContent = `${h}h ${m}m`;
+    }
+    upd(); setInterval(upd, 60000);
+}
+
+// ── Emoji picker ──────────────────────────────────────────────────────────
+function populateCities() {
+    ['r-city','gs-city'].forEach(id => {
+        const sel = document.getElementById(id); if (!sel) return;
+        cities.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+    });
+}
+function populateEmojis() {
+    ['r-egrid','gs-egrid','prof-egrid'].forEach(id => {
+        const g = document.getElementById(id); if (!g) return;
+        g.innerHTML = emojis.map(e => `<div class="e-opt" onclick="pickEmoji('${id}','${e}')">${e}</div>`).join('');
+    });
+}
+function toggleEmoji(prefix) { document.getElementById(prefix+'-egrid')?.classList.toggle('hidden'); }
+function pickEmoji(gridId, emoji) {
+    const prefix = gridId.replace('-egrid','');
+    const btn = document.getElementById(prefix+'-epick');
+    const val = document.getElementById(prefix+'-emoji');
+    if (btn) btn.textContent = emoji;
+    if (val) val.value = emoji;
+    document.getElementById(gridId)?.classList.add('hidden');
+    document.querySelectorAll(`#${gridId} .e-opt`).forEach(el => el.classList.toggle('sel', el.textContent === emoji));
+}
+function openEmojiEdit() {
+    document.getElementById('emoji-modal').classList.remove('hidden');
+    document.querySelectorAll('#prof-egrid .e-opt').forEach(el => {
+        el.onclick = async () => {
+            const emoji = el.textContent;
+            await fetch('/api/users/me', { method: 'PUT', headers: {'Content-Type':'application/json', Authorization: `Bearer ${authToken}`}, body: JSON.stringify({ emoji }) });
+            currentUser.emoji = emoji;
+            document.getElementById('prof-emoji').textContent = emoji;
+            document.getElementById('emoji-modal').classList.add('hidden');
+        };
+    });
+}
+
+// ── Time ago ──────────────────────────────────────────────────────────────
+function timeAgo(unixTs) {
+    if (!unixTs) return '';
+    const diff = Math.floor(Date.now() / 1000) - unixTs;
+    if (diff < 60) return 'acum câteva secunde';
+    if (diff < 3600) return `acum ${Math.floor(diff / 60)} min`;
+    if (diff < 86400) return `acum ${Math.floor(diff / 3600)}h`;
+    const d = new Date(unixTs * 1000);
+    return d.toLocaleDateString('ro-RO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+
+// ── Leaderboard ───────────────────────────────────────────────────────────────────────────────
+let lbSelectedCity = null;
+
+function renderLbFilter(activeCity) {
+    var bar = document.getElementById('lb-filter-bar');
+    if (!bar) return;
+    var cl = ['Toate'].concat(cities.slice(0, 14));
+    bar.innerHTML = cl.map(function(c) {
+        var isAct = (c === 'Toate' && !activeCity) || c === activeCity;
+        return '<button class="lb-filter-btn' + (isAct ? ' active' : '') + '" data-city="' + c + '" onclick="setLbCity(this.dataset.city)">' + c + '</button>';
+    }).join('');
+}
+function setLbCity(city) { lbSelectedCity = city === 'Toate' ? null : city; loadLeaderboard(); }
+
+async function loadLeaderboard() {
+    var city = lbSelectedCity !== null ? lbSelectedCity : (selectedCity || currentUser && currentUser.city || '');
+    var cityEl = document.getElementById('lb-city-name');
+    if (cityEl) cityEl.textContent = city || 'toate';
+    renderLbFilter(lbSelectedCity);
+    var podiumEl = document.getElementById('lb-podium');
+    var listEl   = document.getElementById('lb-list');
+    var prevEl   = document.getElementById('lb-prev-winners');
+
+    var results = await Promise.all([
+        fetch('/api/leaderboard/' + encodeURIComponent(city), { headers: { Authorization: 'Bearer ' + authToken } }).then(function(r){ return r.json(); }).catch(function(){ return []; }),
+        fetch('/api/winners?city=' + encodeURIComponent(city)).then(function(r){ return r.json(); }).catch(function(){ return []; })
+    ]);
+    var photos = results[0], winners = results[1];
+
+    if (prevEl && winners && winners.length) {
+        var m3 = ['🥇','🥈','🥉'];
+        prevEl.style.display = '';
+        prevEl.innerHTML = '<div class="pw-title">🏆 Câştigătorii de ieri — ' + ((winners[0] && winners[0].city) || city) + '</div>' +
+            winners.slice(0, 3).map(function(w, i) {
+                return '<div class="pw-row"><div class="pw-rank">' + (m3[i]||'#'+(i+1)) + '</div>' +
+                    (w.photo_filename ? '<img class="pw-img" src="/uploads/'+w.photo_filename+'" onerror="this.style.opacity=0.2">' : '<div style="width:44px"></div>') +
+                    '<div class="pw-info"><h4>'+(w.emoji||'😊')+' @'+w.username+'</h4><p>'+w.city+'</p></div>' +
+                    '<div class="pw-score">'+(w.score>0?'+':'')+parseFloat(w.score).toFixed(1)+'</div></div>';
+            }).join('');
+    } else if (prevEl) { prevEl.style.display = 'none'; }
+
+    if (!photos || !photos.length) {
+        if (podiumEl) podiumEl.innerHTML = '';
+        if (listEl) listEl.innerHTML = '<div class="lb-empty">Nicio poză postată azi în ' + (city || 'oraş') + '.<br>Fii primul!</div>';
+        return;
+    }
+    var medals = ['🥅','🥈','🥉'];
+    var bC = ['linear-gradient(to bottom,#ffd700,#e6a800)','linear-gradient(to bottom,#c0c0c0,#909090)','linear-gradient(to bottom,#cd7f32,#8B4513)'];
+    var bH = [56,44,36], imgSz = [82,68,60], brd = ['#ffd700','#c0c0c0','#cd7f32'];
+    if (podiumEl) {
+        podiumEl.innerHTML = [1,0,2].map(function(di,vi) {
+            var p = photos[di]; if (!p) return '<div style="width:60px"></div>';
+            var sz = imgSz[di];
+            return '<div class="pod-item" style="order:'+(vi+1)+'">'+
+                '<div class="pod-medal">'+medals[di]+'</div>'+
+                '<img class="pod-img" src="/uploads/'+p.filename+'" style="width:'+sz+'px;height:'+sz+'px;border-color:'+brd[di]+';" onerror="this.style.opacity=0.25">'+
+                '<div class="pod-uname">'+(p.emoji||'😊')+' @'+p.username+'</div>'+
+                '<div class="pod-score">'+(p.score>0?'+':'')+parseFloat(p.score).toFixed(1)+'</div>'+
+                '<div class="pod-base" style="height:'+bH[di]+'px;background:'+bC[di]+';width:'+sz+'px;">'+(di+1)+'</div></div>';
+        }).join('');
+    }
+    if (listEl) {
+        listEl.innerHTML = '<div class="lb-city-lbl">📊 Clasament '+(city||'General')+'</div>' +
+            photos.map(function(p,i) {
+                return '<div class="lb-row"><div class="lb-num">'+(medals[i]||(i+1))+'</div>'+
+                    '<img class="lb-thumb" src="/uploads/'+p.filename+'" onerror="this.style.opacity=0.2">'+
+                    '<div class="lb-info"><h4>'+(p.emoji||'😊')+' @'+p.username+'</h4>'+
+                    '<p>'+(p.user_city||p.city)+' · '+p.vote_count+' voturi</p></div>'+
+                    '<div class="lb-score">'+(p.score>0?'+':'')+parseFloat(p.score).toFixed(1)+'</div></div>';
+            }).join('');
+    }
+}
+
+// ── Winner Reveal — all 3 on one screen ──────────────────────────────────────────────────────────────
+// ── Winner Reveal — sequential tap ──────────────────────────────────────────────────────
+var wrWinners = [], wrCity = '', wrSlide = 0;
+var wrMedals   = ['🥇','🥈','🥉'];
+var wrCongrats = ['🎉 Felicitări!', 'Bravo!', 'Super!'];
+var wrTitles   = ['Câştigătorul zilei', 'Locul 2', 'Locul 3'];
+var wrHints    = ['Apasă pentru a continua', 'Apasă pentru a continua', 'Apasă pentru a merge în aplicație'];
+
+function showWinners(city, winners) {
+    if (!winners || !winners.length) return;
+    wrWinners = winners; wrCity = city || ''; wrSlide = 0;
+    renderWrSlide();
+    document.getElementById('winner-reveal').classList.remove('hidden');
+}
+
+function renderWrSlide() {
+    var i = wrSlide;
+    var w = wrWinners[i];
+    document.getElementById('wr-medal-big').textContent  = wrMedals[i]   || '🏅';
+    document.getElementById('wr-congrats').textContent   = wrCongrats[i] || '';
+    document.getElementById('wr-place-title').textContent = wrTitles[i]  || ('Locul '+(i+1));
+    document.getElementById('wr-tap-hint').textContent   = wrHints[i]    || 'Apasă';
+    document.getElementById('wr-slide-city').textContent = wrCity;
+    // progress dots
+    for (var d = 0; d < 3; d++) {
+        var dot = document.getElementById('wr-pd-'+d);
+        if (dot) dot.className = 'wr-prog-dot' + (d === i ? ' active' : '');
+    }
+    // re-trigger medal pop animation
+    var medal = document.getElementById('wr-medal-big');
+    medal.style.animation = 'none';
+    medal.offsetHeight; // reflow
+    medal.style.animation = '';
+    // photo + blurred background
+    var photo = document.getElementById('wr-slide-photo');
+    var bg    = document.getElementById('wr-bg');
+    if (w && w.photo_filename) {
+        var url = '/uploads/' + w.photo_filename;
+        photo.src = url; photo.style.display = '';
+        bg.style.backgroundImage = 'url(' + url + ')';
+    } else {
+        photo.style.display = 'none';
+        bg.style.backgroundImage = 'none';
+    }
+    if (w) {
+        document.getElementById('wr-slide-name').textContent  = (w.emoji || '😊') + ' @' + w.username;
+        document.getElementById('wr-slide-score').textContent = (w.score > 0 ? '+' : '') + parseFloat(w.score).toFixed(1) + ' pt';
+    } else {
+        document.getElementById('wr-slide-name').textContent  = '';
+        document.getElementById('wr-slide-score').textContent = '';
+    }
+}
+
+function nextWinnerSlide() {
+    var next = wrSlide + 1;
+    // skip missing winners
+    while (next < 3 && !wrWinners[next]) next++;
+    if (next >= 3 || !wrWinners[next]) { closeWinnerReveal(); return; }
+    wrSlide = next;
+    renderWrSlide();
+}
+
+function closeWinners() { closeWinnerReveal(); }
+function closeWinnerReveal() { document.getElementById('winner-reveal').classList.add('hidden'); }
+
+// ── Gold Vote ─────────────────────────────────────────────────────────────
+let goldVoteUsedPhotoId = null;
+
+async function checkGoldVote() {
+    if (!authToken) return;
+    try {
+        const r = await fetch('/api/goldvote/status', { headers: { Authorization: 'Bearer ' + authToken } });
+        const d = await r.json();
+        goldVoteUsedPhotoId = d.used ? d.photo_id : null;
+        updateGoldVoteBtn();
+    } catch(e) { console.error('checkGoldVote', e); }
+}
+
+function updateGoldVoteBtn() {
+    const btn = document.getElementById('gold-vote-btn');
+    if (!btn) return;
+    const p = photos[currentIdx];
+    if (!p) { btn.style.display = 'none'; return; }
+    const isOwn = p.user_id === (currentUser && currentUser.id);
+    if (isOwn) { btn.style.display = 'none'; return; }
+    btn.style.display = '';
+    const alreadyUsed = goldVoteUsedPhotoId !== null;
+    const usedOnThis = goldVoteUsedPhotoId === p.id;
+    btn.disabled = alreadyUsed;
+    btn.className = 'gold-vote-float' + (alreadyUsed ? ' used' : '');
+    btn.textContent = usedOnThis ? '🌟 Vot de Aur dat!' : alreadyUsed ? '🌟 Vot folosit' : '🌟 Vot de Aur';
+}
+
+async function sendGoldVote() {
+    const p = photos[currentIdx];
+    if (!p || goldVoteUsedPhotoId !== null) return;
+    const btn = document.getElementById('gold-vote-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '...'; }
+    try {
+        const r = await fetch('/api/photos/' + p.id + '/goldvote', {
+            method: 'POST', headers: { Authorization: 'Bearer ' + authToken }
+        });
+        const d = await r.json();
+        if (r.ok) {
+            goldVoteUsedPhotoId = p.id;
+            updateGoldVoteBtn();
+            updateScorePill(d.score);
+            p.score = d.score; p.vote_count = d.vote_count;
+            showToast('🌟 Vot de Aur trimis! +10 puncte', 3000);
+        } else {
+            showToast(d.error || 'Eroare', 2500);
+            if (btn) btn.disabled = false;
+            updateGoldVoteBtn();
+        }
+    } catch(e) { if (btn) btn.disabled = false; updateGoldVoteBtn(); }
+}
+
+// ── Duel ──────────────────────────────────────────────────────────────────
+let activeDuel = null;
+
+async function loadDuel() {
+    if (!authToken) return;
+    try {
+        const r = await fetch('/api/duel/active', { headers: { Authorization: 'Bearer ' + authToken } });
+        activeDuel = await r.json();
+        renderDuel();
+    } catch(e) { console.error('loadDuel', e); }
+}
+
+function renderDuel() {
+    var container = document.getElementById('duel-container');
+    if (!container) return;
+    if (!activeDuel) { container.style.display = 'none'; return; }
+    var d = activeDuel;
+    var total = (d.votes_city1 || 0) + (d.votes_city2 || 0);
+    var pct1 = total ? Math.round((d.votes_city1 / total) * 100) : 50;
+    var pct2 = 100 - pct1;
+    var voted = d.my_vote;
+    var s1 = voted && voted !== d.city1 ? 'duel-voted-side' : '';
+    var s2 = voted && voted !== d.city2 ? 'duel-voted-side' : '';
+    var l1 = (d.votes_city1 || 0) >= (d.votes_city2 || 0) ? 'winning' : '';
+    var l2 = (d.votes_city2 || 0) > (d.votes_city1 || 0) ? 'winning' : '';
+    var oc1 = voted ? '' : ' onclick="voteDuelSide(0)"';
+    var oc2 = voted ? '' : ' onclick="voteDuelSide(1)"';
+    var ph1 = d.photo1 ? '<img src="/uploads/' + d.photo1.filename + '" onerror="this.style.opacity=0.2">' : '<div class="duel-placeholder">⏳<br>Aşteaptă poza<br>' + d.city1 + '</div>';
+    var ph2 = d.photo2 ? '<img src="/uploads/' + d.photo2.filename + '" onerror="this.style.opacity=0.2">' : '<div class="duel-placeholder">⏳<br>Aşteaptă poza<br>' + d.city2 + '</div>';
+    var chk1 = voted === d.city1 ? '<div class="duel-check">✓</div>' : '';
+    var chk2 = voted === d.city2 ? '<div class="duel-check">✓</div>' : '';
+    var footer = voted ? '<div class="duel-tap-hint">Ai votat pentru ' + voted + '</div>' : '';
+    container.style.display = '';
+    container.innerHTML =
+        '<div class="duel-card">' +
+            '<div class="duel-header"><h3>⚔️ Duel Oraşe</h3><span>' + d.city1 + ' vs ' + d.city2 + '</span></div>' +
+            '<div class="duel-photos">' +
+                '<div class="duel-divider"></div>' +
+                '<div class="duel-side ' + s1 + '"' + oc1 + '>' + ph1 + chk1 + '<div class="duel-city-lbl">' + d.city1 + '</div></div>' +
+                '<div class="duel-side ' + s2 + '"' + oc2 + '>' + ph2 + chk2 + '<div class="duel-city-lbl">' + d.city2 + '</div></div>' +
+            '</div>' +
+            '<div class="duel-vote-bar">' +
+                '<div class="dvb-side ' + l1 + '">' + pct1 + '% (' + (d.votes_city1 || 0) + ')</div>' +
+                '<div class="dvb-side ' + l2 + '">' + pct2 + '% (' + (d.votes_city2 || 0) + ')</div>' +
+            '</div>' +
+            footer +
+        '</div>';
+}
+
+function voteDuelSide(idx) {
+    if (!activeDuel || activeDuel.my_vote) return;
+    voteDuel(idx === 0 ? activeDuel.city1 : activeDuel.city2);
+}
+
+async function voteDuel(city) {
+    if (!activeDuel || activeDuel.my_vote) return;
+    const r = await fetch('/api/duel/' + activeDuel.id + '/vote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + authToken },
+        body: JSON.stringify({ city })
+    });
+    if (r.ok) {
+        activeDuel.my_vote = city;
+        renderDuel();
+        showToast('⚔️ Ai votat pentru ' + city + '!', 2500);
+    }
+}
+
+function updateDuelVotes(duel_id, v1, v2) {
+    if (activeDuel && activeDuel.id === duel_id) {
+        activeDuel.votes_city1 = v1;
+        activeDuel.votes_city2 = v2;
+        renderDuel();
+    }
+}
+
+// ── Share profile ─────────────────────────────────────────────────────────
+async function shareProfile() {
+    if (!currentUser) return;
+    const streak = currentUser.streak || 0;
+    const wins = [];
+    if (currentUser.wins_1st) wins.push('🥇×' + currentUser.wins_1st);
+    if (currentUser.wins_2nd) wins.push('🥈×' + currentUser.wins_2nd);
+    if (currentUser.wins_3rd) wins.push('🥉×' + currentUser.wins_3rd);
+    const text = '@' + currentUser.username + ' pe PicTop 🏆\n' +
+        (wins.length ? wins.join('  ') + '\n' : '') +
+        (streak > 0 ? '🔥 Streak: ' + streak + ' zile\n' : '') +
+        'pictop.ro';
+    if (navigator.share) {
+        try { await navigator.share({ title: 'PicTop', text }); return; } catch(e) {}
+    }
+    try { await navigator.clipboard.writeText(text); } catch(e) {}
+    showToast('📋 Copiat în clipboard!', 3000);
+}
+
+window.addEventListener('load', init);
+
+// ── Reset Password ──────────────────────────────────────────────────────────────
+(function() {
+    if (window.location.pathname === '/reset-password') {
+        document.addEventListener('DOMContentLoaded', function() {
+            var s = document.getElementById('reset-pw-screen');
+            if (s) s.classList.remove('hidden');
+        });
+    }
+})();
+
+async function submitResetPassword() {
+    var token = new URLSearchParams(window.location.search).get('token');
+    var pw = document.getElementById('reset-pw-input').value.trim();
+    var confirm = document.getElementById('reset-pw-confirm').value.trim();
+    var msg = document.getElementById('reset-pw-msg');
+    if (!token) { msg.textContent = 'Link invalid sau expirat.'; return; }
+    if (!pw || pw.length < 6) { msg.textContent = 'Parola trebuie să aibă cel puțin 6 caractere'; return; }
+    if (pw !== confirm) { msg.textContent = 'Parolele nu coincid'; return; }
+    msg.textContent = '…';
+    try {
+        var r = await fetch('/api/auth/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: token, password: pw })
+        });
+        var d = await r.json();
+        if (r.ok) {
+            msg.style.color = '#4caf50';
+            msg.textContent = '✅ Parolă schimbată! Te ducem la aplicație...';
+            setTimeout(function() { window.location.href = '/?pw_reset=1'; }, 2000);
+        } else {
+            msg.textContent = d.error || 'Eroare. Link-ul poate fi expirat.';
+        }
+    } catch(e) { msg.textContent = 'Eroare de rețea'; }
+}
+</script>
+<div id="reset-pw-screen" class="hidden">
+  <div class="reset-pw-box">
+    <h2>🔒 Resetare parolă</h2>
+    <input type="password" id="reset-pw-input" placeholder="Parolă nouă" autocomplete="new-password">
+    <input type="password" id="reset-pw-confirm" placeholder="Confirmă parola" autocomplete="new-password">
+    <button onclick="submitResetPassword()">Setează parola</button>
+    <div class="reset-pw-msg" id="reset-pw-msg"></div>
+  </div>
+</div>
 </body>
 </html>
