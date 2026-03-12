@@ -94,14 +94,15 @@ workflows:
             --scheme App \
             --archive-flags="-destination 'generic/platform=iOS'"
 
-      - name: Upload to TestFlight
+      - name: Upload to App Store Connect
         script: |
+          IPA=$(find build/ios/ipa -name "*.ipa" | head -1)
+          echo "Uploading IPA: $IPA"
           app-store-connect publish \
-            --path build/ios/ipa/App.ipa \
+            --path "$IPA" \
             --private-key @file:/tmp/AuthKey.p8 \
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
-            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
-            --testflight
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID"
 
     artifacts:
       - build/ios/ipa/*.ipa
