@@ -79,7 +79,8 @@ workflows:
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" 2>&1) || true
           echo "Raw output: '$RAW_BUILD'"
           CURRENT_BUILD=$(echo "$RAW_BUILD" | grep -E '^[0-9]+$' | tail -1)
-          CURRENT_BUILD=${CURRENT_BUILD:-6}
+          CURRENT_BUILD=${CURRENT_BUILD:-7}
+          if [ "$CURRENT_BUILD" -lt 7 ]; then CURRENT_BUILD=7; fi
           echo "CURRENT_BUILD: $CURRENT_BUILD"
           NEW_BUILD=$((CURRENT_BUILD + 1))
           echo "NEW_BUILD: $NEW_BUILD"
