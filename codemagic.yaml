@@ -84,7 +84,7 @@ workflows:
           echo "CURRENT_BUILD: $CURRENT_BUILD"
           NEW_BUILD=$((CURRENT_BUILD + 1))
           echo "NEW_BUILD: $NEW_BUILD"
-          agvtool new-marketing-version 1.0.0
+          agvtool new-marketing-version 1.1.0
           agvtool new-version -all $NEW_BUILD
         working_directory: ios/App
 
