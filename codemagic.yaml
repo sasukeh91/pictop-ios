@@ -1,6 +1,6 @@
 workflows:
   ios-workflow:
-    name: PicTop iOS Build
+    name: Handy-Man iOS Build
     max_build_duration: 60
     environment:
       xcode: latest
@@ -9,7 +9,7 @@ workflows:
         - ios_build
       vars:
         APP_ID: ro.pictop.app
-        APP_NAME: "PicTop"
+        APP_NAME: "Handy-Man"
     scripts:
       - name: Prepare API key
         script: |
@@ -57,12 +57,16 @@ workflows:
       - name: Set permissions and export compliance
         script: |
           PLIST="ios/App/App/Info.plist"
-          /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'PicTop uses the camera to take your daily photo'" "$PLIST" 2>/dev/null || \
-          /usr/libexec/PlistBuddy -c "Set :NSCameraUsageDescription 'PicTop uses the camera to take your daily photo'" "$PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 'PicTop accesses your photos to upload your daily picture'" "$PLIST" 2>/dev/null || \
-          /usr/libexec/PlistBuddy -c "Set :NSPhotoLibraryUsageDescription 'PicTop accesses your photos to upload your daily picture'" "$PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryAddUsageDescription string 'PicTop saves photos to your library'" "$PLIST" 2>/dev/null || \
-          /usr/libexec/PlistBuddy -c "Set :NSPhotoLibraryAddUsageDescription 'PicTop saves photos to your library'" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'Handy-Man uses the camera to add photos to your jobs and profile'" "$PLIST" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :NSCameraUsageDescription 'Handy-Man uses the camera to add photos to your jobs and profile'" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 'Handy-Man accesses your photos so you can attach them to jobs and your profile'" "$PLIST" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :NSPhotoLibraryUsageDescription 'Handy-Man accesses your photos so you can attach them to jobs and your profile'" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryAddUsageDescription string 'Handy-Man saves photos to your library'" "$PLIST" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :NSPhotoLibraryAddUsageDescription 'Handy-Man saves photos to your library'" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :NSLocationWhenInUseUsageDescription string 'Handy-Man uses your location to show jobs near you on the map'" "$PLIST" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :NSLocationWhenInUseUsageDescription 'Handy-Man uses your location to show jobs near you on the map'" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Handy-Man" "$PLIST" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string Handy-Man" "$PLIST"
           /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST" 2>/dev/null || \
           /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$PLIST"
 
@@ -84,7 +88,7 @@ workflows:
           echo "CURRENT_BUILD: $CURRENT_BUILD"
           NEW_BUILD=$((CURRENT_BUILD + 1))
           echo "NEW_BUILD: $NEW_BUILD"
-          agvtool new-marketing-version 1.1.0
+          agvtool new-marketing-version 2.0.0
           agvtool new-version -all $NEW_BUILD
         working_directory: ios/App
 
