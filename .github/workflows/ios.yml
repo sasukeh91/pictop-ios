@@ -66,11 +66,8 @@ jobs:
             -workspace App.xcworkspace -scheme App \
             -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/App.xcarchive" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$HOME/.appstoreconnect/private_keys/AuthKey_${KEY_ID}.p8" \
-            -authenticationKeyID "$KEY_ID" \
-            -authenticationKeyIssuerID "$ISSUER_ID" \
-            DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_STYLE=Automatic 2>&1 | tee "$RUNNER_TEMP/archive.log" || { report "$RUNNER_TEMP/archive.log"; exit 1; }
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="$TEAM_ID" 2>&1 | tee "$RUNNER_TEMP/archive.log" || { report "$RUNNER_TEMP/archive.log"; exit 1; }
 
       - name: Export and upload to App Store Connect
         working-directory: ios/App
