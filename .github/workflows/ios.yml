@@ -1,0 +1,93 @@
+name: Handy-Man iOS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      APP_ID: ro.pictop.app
+      TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Write API key
+        run: |
+          mkdir -p "$HOME/.appstoreconnect/private_keys"
+          echo "${{ secrets.ASC_KEY_B64 }}" | base64 --decode > "$HOME/.appstoreconnect/private_keys/AuthKey_${KEY_ID}.p8"
+
+      - name: Install dependencies
+        run: |
+          npm install
+          npm install -g @capacitor/cli @capacitor/assets
+
+      - name: Add and sync iOS platform
+        run: |
+          [ -d ios ] || npx cap add ios
+          npx @capacitor/assets generate --ios
+          npx cap copy ios
+          npx cap update ios
+
+      - name: Permissions and export compliance
+        run: |
+          PLIST="ios/App/App/Info.plist"
+          set_key() { /usr/libexec/PlistBuddy -c "Set :$1 $2" "$PLIST" 2>/dev/null || /usr/libexec/PlistBuddy -c "Add :$1 $3 $2" "$PLIST"; }
+          set_key NSCameraUsageDescription "Handy-Man uses the camera to add photos to your jobs and profile" string
+          set_key NSPhotoLibraryUsageDescription "Handy-Man accesses your photos so you can attach them to jobs and your profile" string
+          set_key NSPhotoLibraryAddUsageDescription "Handy-Man saves photos to your library" string
+          set_key NSLocationWhenInUseUsageDescription "Handy-Man uses your location to show jobs near you on the map" string
+          set_key CFBundleDisplayName "Handy-Man" string
+          set_key ITSAppUsesNonExemptEncryption false bool
+
+      - name: Set version
+        working-directory: ios/App
+        run: |
+          agvtool new-marketing-version 2.0.0
+          agvtool new-version -all $((100 + ${{ github.run_number }}))
+
+      - name: Archive
+        working-directory: ios/App
+        run: |
+          xcodebuild archive \
+            -workspace App.xcworkspace -scheme App \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/.appstoreconnect/private_keys/AuthKey_${KEY_ID}.p8" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER_ID" \
+            DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_STYLE=Automatic
+
+      - name: Export and upload to App Store Connect
+        working-directory: ios/App
+        run: |
+          cat > "$RUNNER_TEMP/export.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>${TEAM_ID}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+          </dict></plist>
+          PLIST
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/export.plist" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/.appstoreconnect/private_keys/AuthKey_${KEY_ID}.p8" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER_ID"
